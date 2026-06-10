@@ -20,7 +20,7 @@ export function DashboardView({ quoteViews, packages, services, supplies, calend
         eyebrow="Panel general"
         title="Gestion centralizada de cotizaciones"
         description="Vista ejecutiva para defender el flujo: crear cotizacion, calcular con paquetes activos, enviar PDF/WhatsApp simulado y bloquear calendario solo cuando el estado es Aceptada."
-        action={<Button icon="plus" onClick={() => setActive("cotizaciones")}>Generar cotizacion</Button>}
+        action={<Button icon="settings" onClick={() => setActive("cotizaciones")}>Gestionar cotizaciones</Button>}
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map(([title, value, icon, note]) => (

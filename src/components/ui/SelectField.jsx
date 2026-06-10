@@ -7,7 +7,7 @@ export function SelectField({ label, value, onChange, children, error }) {
         onChange={(event) => onChange(event.target.value)}
         className={`w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100 ${
           error ? "border-rose-300" : "border-slate-200"
-        }`}
+        } text-slate-900 [color-scheme:light]`}
       >
         {children}
       </select>

@@ -5,6 +5,8 @@ import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { SelectField } from "../ui/SelectField";
 
+const getSchedule = (quote) => `${quote.startTime || quote.time || "--:--"} - ${quote.endTime || "--:--"}`;
+
 export function StatusModal({ quoteView, onClose, onUpdate }) {
   const [newStatus, setNewStatus] = useState("Aceptada");
   const allowed = quoteView.state === "Enviada";
@@ -20,9 +22,10 @@ export function StatusModal({ quoteView, onClose, onUpdate }) {
         <button type="button" onClick={onClose} className="rounded-md p-2 hover:bg-slate-100"><AppIcon name="close" className="h-6 w-6" /></button>
       </div>
       <div className="mt-5 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
-        <div className="flex justify-between"><span className="text-slate-500">Codigo</span><strong>{quoteView.code} · V{quoteView.version}</strong></div>
+        <div className="flex justify-between"><span className="text-slate-500">Codigo</span><strong>{quoteView.code} / V{quoteView.version}</strong></div>
         <div className="mt-2 flex justify-between"><span className="text-slate-500">Cliente</span><strong>{quoteView.clientName}</strong></div>
         <div className="mt-2 flex justify-between"><span className="text-slate-500">Fecha</span><strong>{quoteView.eventDate}</strong></div>
+        <div className="mt-2 flex justify-between"><span className="text-slate-500">Horario</span><strong>{getSchedule(quoteView)}</strong></div>
         <div className="mt-2 flex justify-between"><span className="text-slate-500">Estado actual</span><Badge variant={quoteView.state}>{quoteView.state}</Badge></div>
       </div>
       {!allowed && (

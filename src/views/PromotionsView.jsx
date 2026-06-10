@@ -18,17 +18,18 @@ export function PromotionsView({ promotions }) {
       <Card>
         <div className="grid gap-3 md:grid-cols-[1fr_180px_auto]">
           <SearchBar placeholder="Buscar por nombre o estado" />
-          <select className="rounded-md border border-slate-200 px-3 py-2 text-sm"><option>Activos</option><option>Inactivos</option><option>Todos</option></select>
+          <select className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 [color-scheme:light]"><option>Activos</option><option>Inactivos</option><option>Todos</option></select>
           <Button variant="secondary" icon="search">Filtrar</Button>
         </div>
       </Card>
       <DataTable
-        headers={["Promocion", "Descuento", "Vigencia", "Condicion", "Estado", "Acciones"]}
+        headers={["Promocion", "Descuento", "Vigencia", "Condicion", "Monto minimo", "Estado", "Acciones"]}
         rows={promotions.map((promotion) => [
           promotion.name,
           `${promotion.discountPercent}%`,
-          promotion.range,
+          `${promotion.startDate} al ${promotion.endDate}`,
           promotion.condition,
+          `$${Number(promotion.minAmount || 0).toFixed(2)}`,
           <Badge variant={promotion.state}>{promotion.state}</Badge>,
           <ActionButtons />,
         ])}

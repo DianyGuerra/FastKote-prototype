@@ -52,6 +52,7 @@ export default function FastKotePrototype() {
         packages: packagesController.packages,
         services: servicesController.services,
         supplies: suppliesController.supplies,
+        promotions,
         quoteViews: quotesController.quoteViews,
         packageMetrics: packagesController.packageMetrics,
         serviceMetrics: servicesController.serviceMetrics,
@@ -63,6 +64,7 @@ export default function FastKotePrototype() {
       packagesController.packages,
       servicesController.services,
       suppliesController.supplies,
+      promotions,
       quotesController.quoteViews,
       packagesController.packageMetrics,
       servicesController.serviceMetrics,
@@ -96,7 +98,8 @@ export default function FastKotePrototype() {
         <QuotesView
           {...viewProps}
           onCreateQuote={quotesController.createQuote}
-          onEditVersion={quotesController.editQuoteVersion}
+          onStartEditQuote={quotesController.startEditQuote}
+          onSaveQuoteVersion={quotesController.saveQuoteVersion}
           onGeneratePdf={quotesController.generatePdf}
           onSendWhatsapp={quotesController.sendWhatsapp}
           onUpdateStatus={quotesController.updateQuoteStatus}

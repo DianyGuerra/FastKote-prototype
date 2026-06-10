@@ -1,0 +1,219 @@
+{
+  "paquetes": [
+    {
+      "id": "PKG001",
+      "nombre": "Combo Bronce",
+      "categoria": "Snack Bar",
+      "precio": 75,
+      "capacidadPersonas": 50,
+      "tipoEvento": [
+        "cumpleaños infantil",
+        "evento escolar",
+        "fiesta familiar"
+      ],
+      "incluye": [
+        {
+          "producto": "Granizados",
+          "cantidad": 50
+        },
+        {
+          "producto": "Mini Hot Dog",
+          "cantidad": 50
+        },
+        {
+          "producto": "Brochetas de chocolate",
+          "cantidad": 50
+        }
+      ],
+      "nivel": "económico",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG002",
+      "nombre": "Combo Plata",
+      "categoria": "Snack Bar",
+      "precio": 95,
+      "capacidadPersonas": 50,
+      "tipoEvento": [
+        "cumpleaños infantil",
+        "día del niño",
+        "evento escolar"
+      ],
+      "incluye": [
+        {
+          "producto": "Canguil o algodón de azúcar",
+          "cantidad": "ilimitado por 1 hora"
+        },
+        {
+          "producto": "Granizados",
+          "cantidad": 50
+        },
+        {
+          "producto": "Brochetas de chocolate",
+          "cantidad": 50
+        }
+      ],
+      "nivel": "intermedio",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG003",
+      "nombre": "Combo Oro",
+      "categoria": "Snack Bar",
+      "precio": 120,
+      "capacidadPersonas": 50,
+      "tipoEvento": [
+        "cumpleaños infantil",
+        "evento escolar",
+        "fiesta familiar"
+      ],
+      "incluye": [
+        {
+          "producto": "Granizados",
+          "cantidad": 50
+        },
+        {
+          "producto": "Canguil",
+          "cantidad": 50
+        },
+        {
+          "producto": "Algodón de azúcar",
+          "cantidad": 50
+        },
+        {
+          "producto": "Brochetas de chocolate",
+          "cantidad": 50
+        },
+        {
+          "producto": "Mini Hot Dog",
+          "cantidad": 50
+        }
+      ],
+      "nivel": "premium",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG004",
+      "nombre": "Super Fiesta",
+      "categoria": "Cumpleaños",
+      "precio": 99.99,
+      "capacidadPersonas": 30,
+      "tipoEvento": [
+        "cumpleaños infantil"
+      ],
+      "incluye": [
+        "3 mesas",
+        "3 snacks",
+        "piñata",
+        "porta sorpresas"
+      ],
+      "nivel": "intermedio",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG005",
+      "nombre": "Día del Niño Básico",
+      "categoria": "Promocional",
+      "precioPorNino": 5,
+      "minimoNinos": 20,
+      "tipoEvento": [
+        "día del niño",
+        "evento escolar"
+      ],
+      "incluye": [
+        "sorpresa",
+        "jugo",
+        "snack"
+      ],
+      "estado": "activo"
+    },
+    {
+      "id": "PKG006",
+      "nombre": "Día del Niño Premium",
+      "categoria": "Promocional",
+      "precioPorNino": 6,
+      "minimoNinos": 20,
+      "tipoEvento": [
+        "día del niño",
+        "evento escolar"
+      ],
+      "incluye": [
+        "sorpresa",
+        "jugo",
+        "snack",
+        "actividad adicional"
+      ],
+      "estado": "activo"
+    }
+  ],
+  "servicios": [
+    {
+      "id": "SER001",
+      "nombre": "Photo Booth 360",
+      "categoria": "Entretenimiento",
+      "tipoEvento": [
+        "cumpleaños",
+        "bodas",
+        "quinceaños",
+        "eventos corporativos"
+      ],
+      "precio": null,
+      "requiereCotizacion": true
+    },
+    {
+      "id": "SER002",
+      "nombre": "Decoración temática",
+      "categoria": "Decoración",
+      "precio": null,
+      "requiereCotizacion": true
+    },
+    {
+      "id": "SER003",
+      "nombre": "Alquiler de local para cumpleaños",
+      "categoria": "Espacio",
+      "precio": null,
+      "requiereCotizacion": true
+    },
+    {
+      "id": "SER004",
+      "nombre": "Piñata personalizada",
+      "categoria": "Complemento",
+      "precio": null,
+      "requiereCotizacion": true
+    }
+  ],
+  "productos": [
+    {
+      "id": "PROD001",
+      "nombre": "Granizado"
+    },
+    {
+      "id": "PROD002",
+      "nombre": "Canguil"
+    },
+    {
+      "id": "PROD003",
+      "nombre": "Algodón de azúcar"
+    },
+    {
+      "id": "PROD004",
+      "nombre": "Brochetas de chocolate"
+    },
+    {
+      "id": "PROD005",
+      "nombre": "Mini Hot Dog"
+    },
+    {
+      "id": "PROD006",
+      "nombre": "Panes de almidón"
+    },
+    {
+      "id": "PROD007",
+      "nombre": "Fresas con crema"
+    },
+    {
+      "id": "PROD008",
+      "nombre": "Mini Pancakes"
+    }
+  ]
+}

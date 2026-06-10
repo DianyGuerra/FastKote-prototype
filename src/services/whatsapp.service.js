@@ -5,3 +5,8 @@ export function simulateWhatsappSend(quote) {
 
   return `WhatsApp simulado registrado para ${quote.code} V${quote.version}; el estado no cambia porque ya no esta en Borrador.`;
 }
+
+export function hasValidPhone(client) {
+  const digits = String(client?.phone || "").replace(/\D/g, "");
+  return digits.length >= 7;
+}

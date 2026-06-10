@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MIN_EVENT_DATE, TAX_RATE } from "../../models/businessRules.model";
+import { timeToMinutes } from "../../services/calendar.service";
 import { currency, getActivePromotion, isActive, roundMoney } from "../../services/quoteCalculation.service";
 import { AppIcon } from "../ui/AppIcon";
 import { Badge } from "../ui/Badge";
@@ -8,24 +9,33 @@ import { Field } from "../ui/Field";
 import { Modal } from "../ui/Modal";
 import { SelectField } from "../ui/SelectField";
 
-export function QuoteModal({ clients, packages, packageMetrics, services, promotions, onClose, onSave }) {
+function addonsToForm(addons = []) {
+  return addons.reduce((acc, item) => {
+    acc[item.serviceId] = Number(item.qty || 0);
+    return acc;
+  }, {});
+}
+
+export function QuoteModal({ clients, packages, packageMetrics, services, promotions, initialQuote = null, onClose, onSave }) {
   const activeClients = clients.filter(isActive);
   const activePackages = packages.filter(isActive);
   const activeServices = services.filter(isActive);
+  const isEditing = Boolean(initialQuote);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    clientId: activeClients[0]?.id || "",
-    packageId: activePackages[0]?.id || "",
-    eventDate: MIN_EVENT_DATE,
-    time: "16:00",
-    observations: "Observaciones del evento y personalizacion solicitada.",
+    clientId: initialQuote?.clientId || activeClients[0]?.id || "",
+    packageId: initialQuote?.packageId || activePackages[0]?.id || "",
+    eventDate: initialQuote?.eventDate || MIN_EVENT_DATE,
+    startTime: initialQuote?.startTime || "16:00",
+    endTime: initialQuote?.endTime || "18:00",
+    observations: initialQuote?.observations || "Observaciones del evento y personalizacion solicitada.",
   });
-  const [addons, setAddons] = useState({});
+  const [addons, setAddons] = useState(() => addonsToForm(initialQuote?.addons));
 
   const packagePreview = packageMetrics.get(form.packageId);
   const addonTotal = activeServices.reduce((total, service) => total + Number(addons[service.id] || 0) * service.price, 0);
   const subtotal = roundMoney((packagePreview?.price || 0) + addonTotal);
-  const promotion = getActivePromotion(promotions, form.packageId);
+  const promotion = getActivePromotion(promotions, form.packageId, form.eventDate, subtotal);
   const discount = promotion ? roundMoney((subtotal * promotion.discountPercent) / 100) : 0;
   const tax = roundMoney(Math.max(subtotal - discount, 0) * TAX_RATE);
   const total = roundMoney(subtotal - discount + tax);
@@ -33,8 +43,14 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
     clientId: form.clientId ? "" : "Selecciona un cliente.",
     packageId: form.packageId ? "" : "Selecciona un paquete activo.",
     eventDate: !form.eventDate ? "Selecciona una fecha." : form.eventDate < MIN_EVENT_DATE ? `La fecha minima es ${MIN_EVENT_DATE}.` : "",
+    startTime: form.startTime ? "" : "Selecciona hora de inicio.",
+    endTime: !form.endTime
+      ? "Selecciona hora de fin."
+      : timeToMinutes(form.endTime) <= timeToMinutes(form.startTime)
+        ? "La hora final debe ser mayor que la inicial."
+        : "",
   };
-  const isValid = !errors.clientId && !errors.packageId && !errors.eventDate;
+  const isValid = !errors.clientId && !errors.packageId && !errors.eventDate && !errors.startTime && !errors.endTime;
 
   const updateForm = (field, value) => setForm((current) => ({ ...current, [field]: value }));
   const updateAddon = (serviceId, value) =>
@@ -56,8 +72,8 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-600">CU-SGC-L1-11 / L1-12 / RN-01</p>
-          <h3 className="text-2xl font-black text-slate-950">Generar cotizacion</h3>
-          <p className="text-sm text-slate-500">Formulario simulado con validacion minima, paquete activo y calculo visual.</p>
+          <h3 className="text-2xl font-black text-slate-950">{isEditing ? "Editar cotizacion" : "Generar cotizacion"}</h3>
+          <p className="text-sm text-slate-500">{isEditing ? "Guarda una nueva version sin sobrescribir el historial." : "Formulario simulado con paquete activo, horario valido y calculo visual."}</p>
         </div>
         <button type="button" onClick={onClose} className="rounded-md p-2 hover:bg-slate-100"><AppIcon name="close" className="h-6 w-6" /></button>
       </div>
@@ -69,9 +85,10 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
           <SelectField label="Paquete base activo *" value={form.packageId} onChange={(value) => updateForm("packageId", value)} error={submitted ? errors.packageId : ""}>
             {activePackages.map((packageItem) => <option key={packageItem.id} value={packageItem.id}>{packageItem.name}</option>)}
           </SelectField>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Fecha del evento *" value={form.eventDate} onChange={(value) => updateForm("eventDate", value)} type="date" min={MIN_EVENT_DATE} error={submitted ? errors.eventDate : ""} />
-            <Field label="Hora" value={form.time} onChange={(value) => updateForm("time", value)} type="time" />
+            <Field label="Hora inicio *" value={form.startTime} onChange={(value) => updateForm("startTime", value)} type="time" error={submitted ? errors.startTime : ""} />
+            <Field label="Hora fin *" value={form.endTime} onChange={(value) => updateForm("endTime", value)} type="time" error={submitted ? errors.endTime : ""} />
           </div>
           <Field label="Observaciones" value={form.observations} onChange={(value) => updateForm("observations", value)} as="textarea" />
           <div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 ring-1 ring-emerald-100">
@@ -117,7 +134,7 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
       </div>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-        <Button icon="file" disabled={!isValid} onClick={save}>Guardar como borrador</Button>
+        <Button icon={isEditing ? "edit" : "file"} disabled={!isValid} onClick={save}>{isEditing ? "Guardar nueva version" : "Guardar como borrador"}</Button>
       </div>
     </Modal>
   );
