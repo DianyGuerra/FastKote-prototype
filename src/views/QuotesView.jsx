@@ -47,7 +47,8 @@ export function QuotesView({
     const query = filters.searchTerm.trim().toLowerCase();
 
     return quoteViews.filter((quote) => {
-      const matchesSearch = !query || quote.code.toLowerCase().includes(query) || quote.clientName.toLowerCase().includes(query);
+      const searchableText = [quote.code, quote.clientName, quote.eventType, quote.compositionSummary].join(" ").toLowerCase();
+      const matchesSearch = !query || searchableText.includes(query);
       const matchesStatus = filters.statusFilter === "Todos" || quote.state === filters.statusFilter;
       const matchesDateFrom = !filters.dateFrom || quote.eventDate >= filters.dateFrom;
       const matchesDateTo = !filters.dateTo || quote.eventDate <= filters.dateTo;
@@ -122,16 +123,21 @@ export function QuotesView({
       )}
       {filteredQuoteViews.length ? (
         <DataTable
-          headers={["Codigo", "Cliente", "Paquete", "Fecha/hora", "Tipo", "Version", "Estado", "Total", "Acciones"]}
+          headers={["Codigo", "Cliente", "Tipo evento", "Invitados", "Tipo cotizacion", "Paquete / composicion", "Fecha/hora", "Version", "Estado", "Total", "Acciones"]}
           rows={filteredQuoteViews.map((quote) => [
             <div>
               <p>{quote.code}</p>
               {!quote.isLatest && <div className="mt-1"><Badge variant="Historial">Historial</Badge></div>}
             </div>,
             quote.clientName,
-            quote.packageName,
-            <div><p>{quote.eventDate}</p><p className="text-xs text-slate-500">{getSchedule(quote)}</p></div>,
+            quote.eventType,
+            quote.guestCount,
             quote.quoteType,
+            <div>
+              <p>{quote.compositionSummary}</p>
+              {quote.quoteType === "Personalizada" && <p className="text-xs text-slate-500">Desde catalogo activo</p>}
+            </div>,
+            <div><p>{quote.eventDate}</p><p className="text-xs text-slate-500">{getSchedule(quote)}</p></div>,
             `V${quote.version}`,
             <Badge variant={quote.state}>{quote.state}</Badge>,
             currency(quote.breakdown.total),

@@ -2,24 +2,76 @@ import { useMemo, useState } from "react";
 import { quotesSeed } from "../models/quotes.model";
 import { buildCalendarEntries, hasAcceptedTimeConflict } from "../services/calendar.service";
 import { createPdfMetadata, simulatePdfGeneration } from "../services/pdf.service";
-import { buildCalculationSnapshot, getById, getQuoteBreakdown, isPersonalizedQuote } from "../services/quoteCalculation.service";
+import { buildCalculationSnapshot, getById, getQuoteBreakdown } from "../services/quoteCalculation.service";
 import { createNextQuoteVersion, getNextQuoteCode } from "../services/versioning.service";
 import { hasValidPhone, simulateWhatsappSend } from "../services/whatsapp.service";
 
+const defaultQuoteFields = {
+  responsibleName: "",
+  eventType: "",
+  guestCount: 0,
+  estimatedBudget: null,
+  eventLocation: "",
+  theme: "",
+  requiresInvoice: false,
+  commercialConditions: "",
+};
+
+function getCompositionSummary(quote, breakdown, packageName) {
+  if (quote.quoteType === "Base") return packageName;
+
+  const items = breakdown.customItemDetails || [];
+  if (!items.length) return "Cotizacion personalizada desde catalogo";
+
+  const names = items.slice(0, 2).map((item) => item.name).join(", ");
+  return items.length > 2 ? `${names} +${items.length - 2}` : names;
+}
+
 export function useQuotesController({ clients, packages, services, supplies, promotions, setNotice }) {
-  const [quotes, setQuotes] = useState(() =>
-    quotesSeed.map((quote) => ({
+  const normalizeQuote = (quote) => {
+    const quoteType = quote.quoteType === "Personalizada" ? "Personalizada" : "Base";
+    const customItems = quoteType === "Personalizada" ? quote.customItems || quote.addons || [] : [];
+    const normalized = {
+      ...defaultQuoteFields,
       ...quote,
+      quoteType,
+      isPersonalized: quoteType === "Personalizada",
+      packageId: quoteType === "Base" ? quote.packageId || "" : null,
+      customItems,
+      addons: [],
+      responsibleName: quote.responsibleName || "",
+      eventType: quote.eventType || "Otro",
+      guestCount: Number(quote.guestCount || 1),
+      estimatedBudget: quote.estimatedBudget === "" || quote.estimatedBudget == null ? null : Number(quote.estimatedBudget),
+      eventLocation: quote.eventLocation || "Lugar por confirmar",
       startTime: quote.startTime || quote.time || "16:00",
       endTime: quote.endTime || "18:00",
-      isPersonalized: quote.isPersonalized ?? isPersonalizedQuote(quote.addons),
-      quoteType: quote.quoteType || (isPersonalizedQuote(quote.addons) ? "Personalizada" : "Base"),
+      theme: quote.theme || "",
+      requiresInvoice: Boolean(quote.requiresInvoice),
+      commercialConditions: quote.commercialConditions || quote.observations || "",
+      observations: quote.observations || quote.commercialConditions || "",
       pdfGenerated: quote.pdfGenerated ?? false,
       pdfGeneratedAt: quote.pdfGeneratedAt || "",
       pdfFileName: quote.pdfFileName || "",
-      calculationSnapshot: quote.calculationSnapshot || buildCalculationSnapshot(quote, packages, services, supplies, promotions),
-    })),
-  );
+    };
+
+    const calculationSnapshot = quote.calculationSnapshot || buildCalculationSnapshot(normalized, packages, services, supplies, promotions);
+
+    return {
+      ...normalized,
+      customItems: normalized.quoteType === "Personalizada"
+        ? calculationSnapshot.customItemDetails.map((item) => ({
+            serviceId: item.serviceId,
+            qty: item.qty,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          }))
+        : [],
+      calculationSnapshot,
+    };
+  };
+
+  const [quotes, setQuotes] = useState(() => quotesSeed.map(normalizeQuote));
 
   const quoteViews = useMemo(() => {
     const maxVersionByCode = quotes.reduce((acc, quote) => {
@@ -32,11 +84,17 @@ export function useQuotesController({ clients, packages, services, supplies, pro
       .map((quote) => {
         const client = getById(clients, quote.clientId);
         const packageItem = getById(packages, quote.packageId);
+        const breakdown = getQuoteBreakdown(quote, packages, services, supplies, promotions);
+        const packageName = quote.quoteType === "Base"
+          ? packageItem?.name || breakdown.packageSnapshot?.name || "Paquete no disponible"
+          : "Cotizacion personalizada desde catalogo";
+
         return {
           ...quote,
           clientName: client?.name || "Cliente no disponible",
-          packageName: packageItem?.name || "Paquete no disponible",
-          breakdown: getQuoteBreakdown(quote, packages, services, supplies, promotions),
+          packageName,
+          compositionSummary: getCompositionSummary(quote, breakdown, packageName),
+          breakdown,
           isLatest: maxVersionByCode[quote.code] === quote.version,
         };
       });
@@ -45,15 +103,35 @@ export function useQuotesController({ clients, packages, services, supplies, pro
   const calendarEntries = useMemo(() => buildCalendarEntries(quoteViews), [quoteViews]);
 
   const buildQuoteData = (quoteData) => {
-    const calculationSnapshot = buildCalculationSnapshot(quoteData, packages, services, supplies, promotions);
-    const isPersonalized = isPersonalizedQuote(quoteData.addons);
-    return {
+    const quoteType = quoteData.quoteType === "Personalizada" ? "Personalizada" : "Base";
+    const baseData = {
+      ...defaultQuoteFields,
       ...quoteData,
-      isPersonalized,
-      quoteType: isPersonalized ? "Personalizada" : "Base",
+      quoteType,
+      isPersonalized: quoteType === "Personalizada",
+      packageId: quoteType === "Base" ? quoteData.packageId : null,
+      customItems: quoteType === "Personalizada" ? quoteData.customItems || [] : [],
+      addons: [],
+      guestCount: Number(quoteData.guestCount || 0),
+      estimatedBudget: quoteData.estimatedBudget === "" || quoteData.estimatedBudget == null ? null : Number(quoteData.estimatedBudget),
+      requiresInvoice: Boolean(quoteData.requiresInvoice),
+      observations: quoteData.commercialConditions || quoteData.observations || "",
       pdfGenerated: false,
       pdfGeneratedAt: "",
       pdfFileName: "",
+    };
+    const calculationSnapshot = buildCalculationSnapshot(baseData, packages, services, supplies, promotions);
+
+    return {
+      ...baseData,
+      customItems: quoteType === "Personalizada"
+        ? calculationSnapshot.customItemDetails.map((item) => ({
+            serviceId: item.serviceId,
+            qty: item.qty,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          }))
+        : [],
       calculationSnapshot,
     };
   };

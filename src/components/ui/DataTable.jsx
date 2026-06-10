@@ -1,7 +1,7 @@
 export function DataTable({ headers, rows }) {
   return (
     <div className="mt-5 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-      <table className="w-full min-w-[900px] text-left text-sm">
+      <table className="w-full min-w-[1120px] text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase text-slate-500">
           <tr>{headers.map((header, index) => <th key={`${header}-${index}`} className="p-4">{header}</th>)}</tr>
         </thead>
