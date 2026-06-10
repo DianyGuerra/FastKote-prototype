@@ -32,6 +32,7 @@ export function computePackageCost(packageItem, services, supplies) {
 }
 
 export function computePackagePrice(packageItem, services, supplies) {
+  if (Number(packageItem?.price || 0) > 0) return roundMoney(packageItem.price);
   const cost = computePackageCost(packageItem, services, supplies);
   return roundMoney(cost * (1 + Number(packageItem.margin || 0) / 100));
 }
@@ -89,11 +90,23 @@ export function getQuoteBreakdown(quote, packages, services, supplies, promotion
 
   if (!isBaseQuote(quote)) {
     const customItemDetails = getCustomItemDetails(quote.customItems || quote.addons || [], services);
+    const sourcePackage = getById(packages, quote.sourcePackageId);
     const subtotal = roundMoney(customItemDetails.reduce((total, item) => total + item.subtotal, 0));
     const tax = roundMoney(subtotal * TAX_RATE);
 
     return {
       quoteType: "Personalizada",
+      personalizationMode: quote.personalizationMode || "Desde cero",
+      sourcePackageId: quote.sourcePackageId || null,
+      sourcePackageSnapshot: sourcePackage
+        ? {
+            packageId: sourcePackage.id,
+            name: sourcePackage.name,
+            desc: sourcePackage.desc,
+            price: computePackagePrice(sourcePackage, services, supplies),
+            state: sourcePackage.state,
+          }
+        : null,
       packageSnapshot: null,
       packageItemDetails: [],
       customItemDetails,
@@ -118,6 +131,9 @@ export function getQuoteBreakdown(quote, packages, services, supplies, promotion
 
   return {
     quoteType: "Base",
+    personalizationMode: null,
+    sourcePackageId: null,
+    sourcePackageSnapshot: null,
     packageSnapshot: packageItem
       ? {
           packageId: packageItem.id,
@@ -161,11 +177,23 @@ export function buildCalculationSnapshot(quoteData, packages, services, supplies
 
   if (!isBaseQuote(quoteData)) {
     const customItemDetails = getCustomItemDetails(quoteData.customItems || quoteData.addons || [], services);
+    const sourcePackage = getById(packages, quoteData.sourcePackageId);
     const subtotal = roundMoney(customItemDetails.reduce((total, item) => total + item.subtotal, 0));
     const tax = roundMoney(subtotal * TAX_RATE);
 
     return {
       quoteType: "Personalizada",
+      personalizationMode: quoteData.personalizationMode || "Desde cero",
+      sourcePackageId: quoteData.sourcePackageId || null,
+      sourcePackageSnapshot: sourcePackage
+        ? {
+            packageId: sourcePackage.id,
+            name: sourcePackage.name,
+            desc: sourcePackage.desc,
+            price: computePackagePrice(sourcePackage, services, supplies),
+            state: sourcePackage.state,
+          }
+        : null,
       eventSnapshot,
       packageSnapshot: null,
       packageItemDetails: [],
@@ -191,6 +219,9 @@ export function buildCalculationSnapshot(quoteData, packages, services, supplies
 
   return {
     quoteType: "Base",
+    personalizationMode: null,
+    sourcePackageId: null,
+    sourcePackageSnapshot: null,
     eventSnapshot,
     packageSnapshot: packageItem
       ? {

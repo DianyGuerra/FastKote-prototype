@@ -22,6 +22,7 @@ export function QuoteDetailModal({ quoteView, onClose }) {
   const promotion = quoteView.breakdown.promotion;
   const eventData = quoteView.breakdown.eventSnapshot || quoteView;
   const isBase = quoteView.quoteType === "Base";
+  const isImported = quoteView.personalizationMode === "Importada desde paquete";
 
   return (
     <Modal maxWidth="max-w-5xl">
@@ -48,7 +49,7 @@ export function QuoteDetailModal({ quoteView, onClose }) {
         <Card className="shadow-none">
           <p className="text-xs uppercase text-slate-500">Tipo cotizacion</p>
           <p className="mt-1 font-bold text-slate-900">{quoteView.quoteType}</p>
-          <p className="mt-2 text-sm text-slate-500">{isBase ? "Paquete base" : "Desde catalogo activo"}</p>
+          <p className="mt-2 text-sm text-slate-500">{isBase ? "Paquete base" : quoteView.personalizationMode}</p>
         </Card>
       </div>
 
@@ -85,7 +86,15 @@ export function QuoteDetailModal({ quoteView, onClose }) {
         ) : (
           <>
             <h4 className="font-bold text-slate-950">Servicios y productos personalizados</h4>
-            <p className="mt-1 rounded-lg bg-violet-50 p-3 text-sm text-violet-800 ring-1 ring-violet-100">Esta cotizacion personalizada no modifica paquetes globales.</p>
+            {isImported && (
+              <div className="mt-2 rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200">
+                <span className="text-slate-500">Paquete usado como plantilla</span>
+                <strong className="block text-slate-900">{quoteView.breakdown.sourcePackageSnapshot?.name || "Paquete no disponible"}</strong>
+              </div>
+            )}
+            <p className="mt-3 rounded-lg bg-violet-50 p-3 text-sm text-violet-800 ring-1 ring-violet-100">
+              {isImported ? "El paquete fue usado solo como base de personalizacion; no se modifico el paquete global." : "Esta cotizacion personalizada no modifica paquetes globales."}
+            </p>
             <div className="mt-4 grid gap-2 text-sm">
               {(quoteView.breakdown.customItemDetails || []).map((item) => (
                 <div key={item.serviceId} className="grid grid-cols-[1fr_70px_110px_110px] gap-3 rounded-lg bg-slate-50 p-3">

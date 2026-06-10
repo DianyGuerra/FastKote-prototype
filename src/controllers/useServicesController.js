@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { servicesSeed } from "../models/services.model";
 import { computeServiceCost, getServiceProfitRisk } from "../services/quoteCalculation.service";
 
-export function useServicesController({ supplies, setNotice }) {
-  const [services, setServices] = useState(servicesSeed);
+export function useServicesController({ supplies, setNotice, initialServices = servicesSeed }) {
+  const [services, setServices] = useState(() => (initialServices.length ? initialServices : servicesSeed));
 
   const serviceMetrics = useMemo(() => {
     const metrics = new Map();

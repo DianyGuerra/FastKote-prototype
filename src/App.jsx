@@ -7,7 +7,7 @@ import { useSuppliesController } from "./controllers/useSuppliesController";
 import { AppLayout } from "./components/layout/AppLayout";
 import { LoginScreen } from "./components/layout/LoginScreen";
 import { clientsSeed } from "./models/clients.model";
-import { promotionsSeed } from "./models/promotions.model";
+import { fastKoteCatalog } from "./services/catalogAdapter.service";
 import { runSelfChecks } from "./tests/selfChecks";
 import { CalendarView } from "./views/CalendarView";
 import { ClientsView } from "./views/ClientsView";
@@ -23,17 +23,20 @@ export default function FastKotePrototype() {
   const navigation = useNavigationController();
   const [notice, setNotice] = useState("");
   const clients = clientsSeed;
-  const promotions = promotionsSeed;
+  const promotions = fastKoteCatalog.promotions;
+  const eventTypes = fastKoteCatalog.eventTypes;
 
   const suppliesController = useSuppliesController({ setNotice });
   const servicesController = useServicesController({
     supplies: suppliesController.supplies,
     setNotice,
+    initialServices: fastKoteCatalog.services,
   });
   const packagesController = usePackagesController({
     services: servicesController.services,
     supplies: suppliesController.supplies,
     setNotice,
+    initialPackages: fastKoteCatalog.packages,
   });
   const quotesController = useQuotesController({
     clients,
@@ -57,6 +60,7 @@ export default function FastKotePrototype() {
         packageMetrics: packagesController.packageMetrics,
         serviceMetrics: servicesController.serviceMetrics,
         calendarEntries: quotesController.calendarEntries,
+        catalogLoaded: fastKoteCatalog.catalogLoaded,
       }),
     [
       clients,
@@ -77,6 +81,8 @@ export default function FastKotePrototype() {
   const viewProps = {
     clients,
     promotions,
+    eventTypes,
+    catalogLoaded: fastKoteCatalog.catalogLoaded,
     supplies: suppliesController.supplies,
     services: servicesController.services,
     packages: packagesController.packages,

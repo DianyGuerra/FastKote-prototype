@@ -1,4 +1,4 @@
-export const MIN_EVENT_DATE = "2026-06-08";
+export const getMinEventDate = () => new Date().toISOString().split("T")[0];
 export const TAX_RATE = 0.15;
 
 export const VALID_QUOTE_STATES = ["Borrador", "Enviada", "Aceptada", "Rechazada", "Vencida"];

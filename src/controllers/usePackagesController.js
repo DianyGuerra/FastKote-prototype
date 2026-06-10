@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { packagesSeed } from "../models/packages.model";
 import { computePackageCost, computePackagePrice } from "../services/quoteCalculation.service";
 
-export function usePackagesController({ services, supplies, setNotice }) {
-  const [packages, setPackages] = useState(packagesSeed);
+export function usePackagesController({ services, supplies, setNotice, initialPackages = packagesSeed }) {
+  const [packages, setPackages] = useState(() => (initialPackages.length ? initialPackages : packagesSeed));
 
   const packageMetrics = useMemo(() => {
     const metrics = new Map();

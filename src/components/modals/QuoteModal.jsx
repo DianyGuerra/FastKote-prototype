@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MIN_EVENT_DATE, TAX_RATE } from "../../models/businessRules.model";
+import { useMemo, useState } from "react";
+import { getMinEventDate, TAX_RATE } from "../../models/businessRules.model";
 import { timeToMinutes } from "../../services/calendar.service";
 import { currency, getActivePromotion, isActive, roundMoney } from "../../services/quoteCalculation.service";
 import { AppIcon } from "../ui/AppIcon";
@@ -9,7 +9,8 @@ import { Field } from "../ui/Field";
 import { Modal } from "../ui/Modal";
 import { SelectField } from "../ui/SelectField";
 
-const eventTypes = ["Cumpleanos infantil", "Evento escolar", "Boda", "Cocteleria", "Mesa dulce", "Otro"];
+const fallbackEventTypes = ["Cumpleanos infantil", "Evento escolar", "Mesa dulce", "Evento familiar", "Otro"];
+const personalizationModes = ["Desde cero", "Importada desde paquete"];
 
 function customItemsToForm(items = []) {
   return items.map((item) => ({ serviceId: item.serviceId, qty: Number(item.qty || 1) }));
@@ -19,34 +20,63 @@ function getSelectedService(services, serviceId) {
   return services.find((service) => service.id === serviceId);
 }
 
-export function QuoteModal({ clients, packages, packageMetrics, services, promotions, initialQuote = null, onClose, onSave }) {
+function getPackageItems(packageItem, services) {
+  return (packageItem?.items || [])
+    .map((item) => {
+      const service = getSelectedService(services, item.serviceId);
+      return service && isActive(service) ? { serviceId: service.id, qty: Number(item.qty || 1) } : null;
+    })
+    .filter(Boolean);
+}
+
+function matchesQuery(...values) {
+  const query = values[0];
+  return (value) => !query || String(value || "").toLowerCase().includes(query);
+}
+
+export function QuoteModal({ clients, packages, packageMetrics, services, promotions, eventTypes = fallbackEventTypes, initialQuote = null, onClose, onSave }) {
   const activeClients = clients.filter(isActive);
   const activePackages = packages.filter(isActive);
   const activeServices = services.filter(isActive);
+  const minEventDate = useMemo(() => getMinEventDate(), []);
+  const eventTypeOptions = eventTypes.length ? eventTypes : fallbackEventTypes;
   const isEditing = Boolean(initialQuote);
   const initialQuoteType = initialQuote?.quoteType === "Personalizada" ? "Personalizada" : "Base";
+  const initialMode = initialQuoteType === "Personalizada" ? initialQuote?.personalizationMode || "Desde cero" : null;
   const [submitted, setSubmitted] = useState(false);
+  const [packageSearch, setPackageSearch] = useState("");
+  const [importPackageSearch, setImportPackageSearch] = useState("");
   const [serviceSearch, setServiceSearch] = useState("");
+  const [importPackageId, setImportPackageId] = useState(initialQuote?.sourcePackageId || activePackages[0]?.id || "");
   const [form, setForm] = useState({
     clientId: initialQuote?.clientId || activeClients[0]?.id || "",
     responsibleName: initialQuote?.responsibleName || "",
-    eventType: initialQuote?.eventType || eventTypes[0],
+    eventType: initialQuote?.eventType || eventTypeOptions[0] || "",
     guestCount: initialQuote?.guestCount || "",
     estimatedBudget: initialQuote?.estimatedBudget ?? "",
     eventLocation: initialQuote?.eventLocation || "",
-    eventDate: initialQuote?.eventDate || MIN_EVENT_DATE,
+    eventDate: initialQuote?.eventDate || minEventDate,
     startTime: initialQuote?.startTime || "16:00",
     endTime: initialQuote?.endTime || "18:00",
     theme: initialQuote?.theme || "",
     requiresInvoice: initialQuote?.requiresInvoice ? "Si" : "No",
     commercialConditions: initialQuote?.commercialConditions || initialQuote?.observations || "",
     quoteType: initialQuoteType,
+    personalizationMode: initialMode,
     packageId: initialQuoteType === "Base" ? initialQuote?.packageId || activePackages[0]?.id || "" : "",
+    sourcePackageId: initialQuoteType === "Personalizada" ? initialQuote?.sourcePackageId || null : null,
   });
   const [customItems, setCustomItems] = useState(() => customItemsToForm(initialQuote?.customItems || initialQuote?.addons || []));
 
   const isBase = form.quoteType === "Base";
+  const isPersonalized = form.quoteType === "Personalizada";
+  const isImported = isPersonalized && form.personalizationMode === "Importada desde paquete";
+  const packageMatcher = matchesQuery(packageSearch.trim().toLowerCase());
+  const importPackageMatcher = matchesQuery(importPackageSearch.trim().toLowerCase());
+  const filteredBasePackages = activePackages.filter((packageItem) => packageMatcher(packageItem.name) || packageMatcher(packageItem.desc));
+  const filteredImportPackages = activePackages.filter((packageItem) => importPackageMatcher(packageItem.name) || importPackageMatcher(packageItem.desc));
   const packageSelected = activePackages.find((packageItem) => packageItem.id === form.packageId);
+  const importPackageSelected = activePackages.find((packageItem) => packageItem.id === importPackageId);
   const packagePreview = packageMetrics.get(form.packageId);
   const baseSubtotal = isBase ? roundMoney(packagePreview?.price || 0) : 0;
   const customDetails = customItems
@@ -70,9 +100,9 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
   const budget = Number(form.estimatedBudget || 0);
   const budgetDiff = roundMoney(total - budget);
   const selectedServiceIds = new Set(customItems.map((item) => item.serviceId));
+  const serviceMatcher = matchesQuery(serviceSearch.trim().toLowerCase());
   const visibleServices = activeServices.filter((service) => {
-    const query = serviceSearch.trim().toLowerCase();
-    return !selectedServiceIds.has(service.id) && (!query || service.name.toLowerCase().includes(query) || service.type.toLowerCase().includes(query));
+    return !selectedServiceIds.has(service.id) && (serviceMatcher(service.name) || serviceMatcher(service.type) || serviceMatcher(service.desc));
   });
 
   const errors = {
@@ -81,30 +111,61 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
     guestCount: Number(form.guestCount) > 0 ? "" : "Ingresa un numero de invitados mayor que 0.",
     estimatedBudget: form.estimatedBudget === "" || Number(form.estimatedBudget) > 0 ? "" : "El presupuesto debe ser mayor que 0.",
     eventLocation: form.eventLocation.trim() ? "" : "Ingresa el lugar del evento.",
-    eventDate: !form.eventDate ? "Selecciona una fecha." : form.eventDate < MIN_EVENT_DATE ? `La fecha minima es ${MIN_EVENT_DATE}.` : "",
+    eventDate: !form.eventDate ? "Selecciona una fecha." : form.eventDate < minEventDate ? `La fecha minima es ${minEventDate}.` : "",
     startTime: form.startTime ? "" : "Selecciona hora de inicio.",
     endTime: !form.endTime
       ? "Selecciona hora de fin."
       : timeToMinutes(form.endTime) <= timeToMinutes(form.startTime)
         ? "La hora final debe ser mayor que la inicial."
         : "",
-    packageId: !isBase || form.packageId ? "" : "Selecciona un paquete activo.",
-    customItems: isBase || customDetails.length > 0 ? "" : "Agrega al menos un servicio o producto activo.",
-    customQty: isBase || customItems.every((item) => Number(item.qty) > 0) ? "" : "Todas las cantidades deben ser mayores que 0.",
+    packageId: !isBase || activePackages.some((packageItem) => packageItem.id === form.packageId) ? "" : "Selecciona un paquete activo.",
+    personalizationMode: !isPersonalized || form.personalizationMode ? "" : "Selecciona un modo de personalizacion.",
+    importPackage: !isImported || form.sourcePackageId ? "" : "Importa un paquete activo antes de guardar.",
+    customItems: !isPersonalized || customDetails.length > 0 ? "" : "Agrega al menos un servicio o producto activo.",
+    customQty: !isPersonalized || customItems.every((item) => Number(item.qty) > 0) ? "" : "Todas las cantidades deben ser mayores que 0.",
   };
   const isValid = Object.values(errors).every((error) => !error);
 
   const updateForm = (field, value) => {
     setForm((current) => {
       if (field === "quoteType") {
+        if (value === "Base") {
+          setCustomItems([]);
+          return {
+            ...current,
+            quoteType: "Base",
+            personalizationMode: null,
+            packageId: current.packageId || activePackages[0]?.id || "",
+            sourcePackageId: null,
+          };
+        }
+        setCustomItems([]);
         return {
           ...current,
-          quoteType: value,
-          packageId: value === "Base" ? current.packageId || activePackages[0]?.id || "" : "",
+          quoteType: "Personalizada",
+          personalizationMode: "Desde cero",
+          packageId: "",
+          sourcePackageId: null,
+        };
+      }
+      if (field === "personalizationMode") {
+        setCustomItems([]);
+        return {
+          ...current,
+          personalizationMode: value,
+          packageId: "",
+          sourcePackageId: null,
         };
       }
       return { ...current, [field]: value };
     });
+  };
+
+  const importPackage = () => {
+    const packageItem = activePackages.find((item) => item.id === importPackageId);
+    if (!packageItem) return;
+    setCustomItems(getPackageItems(packageItem, activeServices));
+    setForm((current) => ({ ...current, sourcePackageId: packageItem.id }));
   };
 
   const addCustomItem = (serviceId) => {
@@ -140,8 +201,10 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
       commercialConditions: form.commercialConditions.trim(),
       observations: form.commercialConditions.trim(),
       quoteType: form.quoteType,
-      isPersonalized: !isBase,
+      isPersonalized,
+      personalizationMode: isBase ? null : form.personalizationMode,
       packageId: isBase ? form.packageId : null,
+      sourcePackageId: isImported ? form.sourcePackageId : null,
       customItems: isBase
         ? []
         : customDetails.map(({ service, qty, subtotal: itemSubtotal }) => ({
@@ -180,14 +243,14 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
               </SelectField>
               <Field label="Responsable del evento" value={form.responsibleName} onChange={(value) => updateForm("responsibleName", value)} placeholder="Ej. Diana Guerra" />
               <SelectField label="Tipo de evento *" value={form.eventType} onChange={(value) => updateForm("eventType", value)} error={submitted ? errors.eventType : ""}>
-                {eventTypes.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}
+                {eventTypeOptions.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}
               </SelectField>
               <Field label="Numero de invitados *" value={form.guestCount} onChange={(value) => updateForm("guestCount", value)} type="number" min="1" error={submitted ? errors.guestCount : ""} />
               <Field label="Presupuesto estimado" value={form.estimatedBudget} onChange={(value) => updateForm("estimatedBudget", value)} type="number" min="0" step="0.01" placeholder="Ej. 450" error={submitted ? errors.estimatedBudget : ""} />
               <Field label="Lugar / direccion del evento *" value={form.eventLocation} onChange={(value) => updateForm("eventLocation", value)} error={submitted ? errors.eventLocation : ""} />
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <Field label="Fecha del evento *" value={form.eventDate} onChange={(value) => updateForm("eventDate", value)} type="date" min={MIN_EVENT_DATE} error={submitted ? errors.eventDate : ""} />
+              <Field label="Fecha del evento *" value={form.eventDate} onChange={(value) => updateForm("eventDate", value)} type="date" min={minEventDate} error={submitted ? errors.eventDate : ""} />
               <Field label="Hora inicio *" value={form.startTime} onChange={(value) => updateForm("startTime", value)} type="time" error={submitted ? errors.startTime : ""} />
               <Field label="Hora fin *" value={form.endTime} onChange={(value) => updateForm("endTime", value)} type="time" error={submitted ? errors.endTime : ""} />
             </div>
@@ -217,7 +280,7 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
                 >
                   <span className="block font-bold text-slate-950">{quoteType}</span>
                   <span className="mt-1 block text-sm text-slate-500">
-                    {quoteType === "Base" ? "Usa un paquete activo del catalogo comercial." : "Selecciona servicios/productos activos sin paquete base."}
+                    {quoteType === "Base" ? "Usa un paquete activo del catalogo comercial." : "Crea desde cero o importa un paquete como plantilla editable."}
                   </span>
                 </button>
               ))}
@@ -230,10 +293,11 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="mb-4">
                 <h4 className="font-bold text-slate-950">Paquete base</h4>
-                <p className="text-sm text-slate-500">Cotizacion construida desde un paquete activo. No incluye items libres.</p>
+                <p className="text-sm text-slate-500">Cotizacion construida desde un paquete activo. No permite editar items.</p>
               </div>
+              <Field label="Buscar paquete" value={packageSearch} onChange={setPackageSearch} placeholder="Ej. infantil, navideno, combo" />
               <SelectField label="Paquete base activo *" value={form.packageId} onChange={(value) => updateForm("packageId", value)} error={submitted ? errors.packageId : ""}>
-                {activePackages.map((packageItem) => <option key={packageItem.id} value={packageItem.id}>{packageItem.name}</option>)}
+                {filteredBasePackages.map((packageItem) => <option key={packageItem.id} value={packageItem.id}>{packageItem.name}</option>)}
               </SelectField>
               {packageSelected && (
                 <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm ring-1 ring-slate-200">
@@ -252,24 +316,57 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h4 className="font-bold text-slate-950">Servicios y productos personalizados</h4>
-                  <p className="text-sm text-slate-500">Construye una propuesta puntual sin modificar paquetes globales.</p>
+                  <h4 className="font-bold text-slate-950">Modo de personalizacion</h4>
+                  <p className="text-sm text-slate-500">El paquete importado solo funciona como plantilla local editable.</p>
                 </div>
-                <Badge variant="Activo">Solo activos</Badge>
+                <Badge variant="Activo">Catalogo JSON</Badge>
               </div>
-              <Field label="Buscar servicio/producto" value={serviceSearch} onChange={setServiceSearch} placeholder="Ej. granizado, transporte, cocteleria" />
-              <div className="mt-3 grid max-h-48 gap-2 overflow-auto pr-1">
-                {visibleServices.map((service) => (
-                  <button key={service.id} type="button" onClick={() => addCustomItem(service.id)} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-left text-sm ring-1 ring-slate-100 hover:bg-violet-50">
-                    <span>
-                      <strong className="block text-slate-800">{service.name}</strong>
-                      <span className="text-xs text-slate-500">{service.type} / {currency(service.price)} por unidad</span>
-                    </span>
-                    <AppIcon name="plus" className="h-4 w-4 text-violet-700" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {personalizationModes.map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => updateForm("personalizationMode", mode)}
+                    className={`rounded-lg border p-3 text-left text-sm transition ${
+                      form.personalizationMode === mode ? "border-violet-400 bg-violet-50 ring-2 ring-violet-100" : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <strong className="block text-slate-950">{mode === "Desde cero" ? "Crear desde cero" : "Importar desde paquete"}</strong>
+                    <span className="text-slate-500">{mode === "Desde cero" ? "Inicia con lista vacia." : "Copia items de un paquete activo."}</span>
                   </button>
                 ))}
-                {!visibleServices.length && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-500">No hay servicios activos disponibles con ese criterio.</p>}
               </div>
+
+              {isImported && (
+                <div className="mt-4 rounded-lg bg-slate-50 p-3 ring-1 ring-slate-200">
+                  <Field label="Buscar paquete para importar" value={importPackageSearch} onChange={setImportPackageSearch} placeholder="Ej. navideno, infantil" />
+                  <SelectField label="Paquete plantilla" value={importPackageId} onChange={setImportPackageId} error={submitted ? errors.importPackage : ""}>
+                    {filteredImportPackages.map((packageItem) => <option key={packageItem.id} value={packageItem.id}>{packageItem.name}</option>)}
+                  </SelectField>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <p className="text-xs text-slate-500">{importPackageSelected?.desc || "Selecciona un paquete activo para copiar sus items."}</p>
+                    <Button variant="secondary" icon="download" disabled={!importPackageSelected} onClick={importPackage}>Importar paquete</Button>
+                  </div>
+                  {form.sourcePackageId && <p className="mt-2 text-xs font-semibold text-emerald-700">Plantilla importada: {activePackages.find((item) => item.id === form.sourcePackageId)?.name}</p>}
+                </div>
+              )}
+
+              <div className="mt-4">
+                <Field label="Buscar servicio/producto" value={serviceSearch} onChange={setServiceSearch} placeholder="Ej. granizado, transporte, decoracion" />
+                <div className="mt-3 grid max-h-44 gap-2 overflow-auto pr-1">
+                  {visibleServices.map((service) => (
+                    <button key={service.id} type="button" onClick={() => addCustomItem(service.id)} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-left text-sm ring-1 ring-slate-100 hover:bg-violet-50">
+                      <span>
+                        <strong className="block text-slate-800">{service.name}</strong>
+                        <span className="text-xs text-slate-500">{service.type} / {currency(service.price)} por unidad</span>
+                      </span>
+                      <AppIcon name="plus" className="h-4 w-4 text-violet-700" />
+                    </button>
+                  ))}
+                  {!visibleServices.length && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-500">No hay servicios/productos activos disponibles con ese criterio.</p>}
+                </div>
+              </div>
+
               <div className="mt-4 grid gap-2">
                 {customDetails.map(({ service, qty, subtotal: itemSubtotal }) => (
                   <div key={service.id} className="grid grid-cols-[1fr_76px_90px_32px] items-center gap-2 rounded-lg border border-slate-200 p-3 text-sm">
@@ -314,7 +411,7 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-        <Button icon={isEditing ? "edit" : "file"} onClick={save}>{isEditing ? "Guardar nueva version" : "Guardar como borrador"}</Button>
+        <Button icon={isEditing ? "edit" : "file"} disabled={!isValid} onClick={save}>{isEditing ? "Guardar nueva version" : "Guardar como borrador"}</Button>
       </div>
     </Modal>
   );

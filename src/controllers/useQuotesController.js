@@ -20,6 +20,13 @@ const defaultQuoteFields = {
 function getCompositionSummary(quote, breakdown, packageName) {
   if (quote.quoteType === "Base") return packageName;
 
+  if (quote.personalizationMode === "Importada desde paquete") {
+    const sourceName = breakdown.sourcePackageSnapshot?.name || "paquete no disponible";
+    return `Personalizada desde paquete: ${sourceName}`;
+  }
+
+  if (quote.personalizationMode === "Desde cero") return "Personalizada desde cero";
+
   const items = breakdown.customItemDetails || [];
   if (!items.length) return "Cotizacion personalizada desde catalogo";
 
@@ -31,12 +38,15 @@ export function useQuotesController({ clients, packages, services, supplies, pro
   const normalizeQuote = (quote) => {
     const quoteType = quote.quoteType === "Personalizada" ? "Personalizada" : "Base";
     const customItems = quoteType === "Personalizada" ? quote.customItems || quote.addons || [] : [];
+    const personalizationMode = quoteType === "Personalizada" ? quote.personalizationMode || "Desde cero" : null;
     const normalized = {
       ...defaultQuoteFields,
       ...quote,
       quoteType,
       isPersonalized: quoteType === "Personalizada",
+      personalizationMode,
       packageId: quoteType === "Base" ? quote.packageId || "" : null,
+      sourcePackageId: quoteType === "Personalizada" ? quote.sourcePackageId || null : null,
       customItems,
       addons: [],
       responsibleName: quote.responsibleName || "",
@@ -104,12 +114,15 @@ export function useQuotesController({ clients, packages, services, supplies, pro
 
   const buildQuoteData = (quoteData) => {
     const quoteType = quoteData.quoteType === "Personalizada" ? "Personalizada" : "Base";
+    const personalizationMode = quoteType === "Personalizada" ? quoteData.personalizationMode || "Desde cero" : null;
     const baseData = {
       ...defaultQuoteFields,
       ...quoteData,
       quoteType,
       isPersonalized: quoteType === "Personalizada",
+      personalizationMode,
       packageId: quoteType === "Base" ? quoteData.packageId : null,
+      sourcePackageId: quoteType === "Personalizada" ? quoteData.sourcePackageId || null : null,
       customItems: quoteType === "Personalizada" ? quoteData.customItems || [] : [],
       addons: [],
       guestCount: Number(quoteData.guestCount || 0),

@@ -27,6 +27,7 @@ export function QuotesView({
   packageMetrics,
   services,
   promotions,
+  eventTypes,
   quoteViews,
   onCreateQuote,
   onStartEditQuote,
@@ -163,6 +164,7 @@ export function QuotesView({
           packageMetrics={packageMetrics}
           services={services}
           promotions={promotions}
+          eventTypes={eventTypes}
           onClose={() => setShowQuote(false)}
           onSave={(quote) => {
             if (onCreateQuote(quote)) setShowQuote(false);
@@ -176,6 +178,7 @@ export function QuotesView({
           packageMetrics={packageMetrics}
           services={services}
           promotions={promotions}
+          eventTypes={eventTypes}
           initialQuote={editingQuote}
           onClose={() => setEditingQuote(null)}
           onSave={(quote) => {
