@@ -1,0 +1,99 @@
+{
+  "paquetes": [
+    {
+      "id": "PKG001",
+      "nombre": "Combo Bronce",
+      "categoria": "Snack Bar",
+      "precio": 75,
+      "capacidadPersonas": 50,
+      "tipoEvento": ["cumpleanos infantil", "evento escolar", "fiesta familiar"],
+      "incluye": ["50 granizados", "50 mini hot dog", "50 brochetas de chocolate"],
+      "nivel": "economico",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG002",
+      "nombre": "Combo Plata",
+      "categoria": "Snack Bar",
+      "precio": 100,
+      "capacidadPersonas": 50,
+      "tipoEvento": ["cumpleanos infantil", "evento escolar"],
+      "incluye": ["canguil o algodon de azucar ilimitado por 1 hora", "50 granizados", "50 brochetas de chocolate"],
+      "nivel": "intermedio",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG003",
+      "nombre": "Combo Oro",
+      "categoria": "Snack Bar",
+      "precio": 120,
+      "capacidadPersonas": 50,
+      "tipoEvento": ["cumpleanos infantil", "evento escolar", "fiesta familiar"],
+      "incluye": ["50 granizados", "50 canguiles", "50 algodones de azucar", "50 brochetas de chocolate", "50 mini hot dog"],
+      "nivel": "premium",
+      "estado": "activo"
+    },
+    {
+      "id": "PKG004",
+      "nombre": "Combo Super Fiesta",
+      "categoria": "Cumpleanos",
+      "precio": 99.99,
+      "capacidadPersonas": 30,
+      "tipoEvento": ["cumpleanos infantil"],
+      "incluye": ["Juego de 3 mesas", "3 tipos de snacks", "Pinata o numero con tematica elegida", "Porta sorpresas + aro"],
+      "nivel": "intermedio",
+      "estado": "activo"
+    }
+  ],
+  "servicios": [
+    {
+      "id": "SER001",
+      "nombre": "Photo Booth 360",
+      "categoria": "Entretenimiento",
+      "precio": null,
+      "requiereCotizacion": true,
+      "tipoEvento": ["cumpleanos", "bodas", "quinceanos", "eventos corporativos"],
+      "estado": "activo"
+    },
+    {
+      "id": "SER002",
+      "nombre": "Pinata personalizada",
+      "categoria": "Complemento",
+      "precio": null,
+      "requiereCotizacion": true,
+      "tipoEvento": ["cumpleanos infantil"],
+      "estado": "activo"
+    },
+    {
+      "id": "SER003",
+      "nombre": "Estacion de granizados",
+      "categoria": "Snack Bar",
+      "precio": null,
+      "requiereCotizacion": true,
+      "tipoEvento": ["cumpleanos infantil", "evento escolar"],
+      "estado": "activo"
+    },
+    {
+      "id": "SER004",
+      "nombre": "Area de juegos",
+      "categoria": "Entretenimiento",
+      "precio": null,
+      "requiereCotizacion": true,
+      "tipoEvento": ["cumpleanos infantil"],
+      "estado": "activo"
+    }
+  ],
+  "promociones": [
+    {
+      "id": "PROM001",
+      "nombre": "Promocion Dia del Nino",
+      "tipoEvento": ["dia del nino", "evento escolar"],
+      "precioPorNino": 5,
+      "minimoNinos": 20,
+      "fechaInicio": "2026-05-28",
+      "fechaFin": "2026-06-03",
+      "incluye": ["Uso de juegos por 2 horas", "Canguil ilimitado", "100 vasos de jugo"],
+      "estado": "activo"
+    }
+  ]
+}
