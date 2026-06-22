@@ -1,16 +1,8 @@
-import rootCatalogFastKote from "../../fastkote_catalogo.json";
-import localCatalogFastKote from "../data/catalogoFastKote.json";
-import { buildRecommendationCatalog } from "./recommendationCatalog.service";
-export { GROQ_RECOMMENDATION_PROMPT, buildGroqRecommendationMessages } from "./recommendationPrompt.service.js";
-
-const catalogoFastKote = buildRecommendationCatalog(localCatalogFastKote, rootCatalogFastKote);
-
 export function normalizeRecommendationText(value) {
   return String(value || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ñ/g, "n")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -24,17 +16,28 @@ const eventMatches = (item, eventType) =>
     return eventType.includes(normalizedType) || normalizedType.includes(eventType);
   });
 
-const findService = (name, services) =>
-  services.find((service) => normalizeRecommendationText(service.nombre) === normalizeRecommendationText(name));
+const findCatalogItem = (items, candidate) => {
+  const id = normalizeRecommendationText(candidate?.id);
+  const name = normalizeRecommendationText(candidate?.nombre || candidate?.name);
+  return items.find((item) => {
+    const itemId = normalizeRecommendationText(item.id);
+    const itemName = normalizeRecommendationText(item.nombre || item.name);
+    return (id && itemId === id) || (name && (itemName === name || itemName.includes(name) || name.includes(itemName)));
+  });
+};
+
+const findService = (name, services) => findCatalogItem(services, { nombre: name });
 
 function getCompatiblePromotion(promotions, eventType, eventDate, guestCount) {
-  return promotions.find((promotion) => {
-    if (!isActive(promotion)) return false;
-    if (!eventMatches(promotion, eventType)) return false;
-    if (Number(promotion.minimoNinos || 0) > Number(guestCount || 0)) return false;
-    if (!eventDate) return true;
-    return eventDate >= promotion.fechaInicio && eventDate <= promotion.fechaFin;
-  }) || null;
+  return (
+    promotions.find((promotion) => {
+      if (!isActive(promotion)) return false;
+      if (!eventMatches(promotion, eventType)) return false;
+      if (Number(promotion.minimoNinos || 0) > Number(guestCount || 0)) return false;
+      if (!eventDate) return true;
+      return eventDate >= promotion.fechaInicio && eventDate <= promotion.fechaFin;
+    }) || null
+  );
 }
 
 function getSuggestedServices({ eventType, theme, eventLocation, commercialConditions, clientPreferences }, services) {
@@ -114,7 +117,7 @@ function buildFallbackJustification(packageItem, budget, score) {
   return `Fallback local: se evaluaron todos los paquetes activos del catalogo por tipo de evento, capacidad, presupuesto y tematica. Puntaje de ajuste: ${Math.round(score)}.${budgetNote}`;
 }
 
-function buildResponse({ packageItem, promotion, services, nivelAjuste, justificacion }) {
+function buildResponse({ packageItem, promotion, services, nivelAjuste, justificacion, necesitaMasDatos = false }) {
   const serviceTotal = services.reduce((total, service) => total + Number(service.precio || 0), 0);
   return {
     paqueteRecomendado: packageItem
@@ -129,11 +132,11 @@ function buildResponse({ packageItem, promotion, services, nivelAjuste, justific
     precioEstimado: Number(packageItem?.precio || 0) + serviceTotal,
     nivelAjuste,
     justificacion,
-    necesitaMasDatos: false,
+    necesitaMasDatos,
   };
 }
 
-export function recomendarPaquete(datosEvento, catalog = catalogoFastKote) {
+export function recomendarPaquete(datosEvento, catalog) {
   const packages = (catalog.paquetes || []).filter(isActive);
   const services = (catalog.servicios || []).filter(isActive);
   const promotions = (catalog.promociones || []).filter(isActive);
@@ -143,15 +146,14 @@ export function recomendarPaquete(datosEvento, catalog = catalogoFastKote) {
   const suggestedServices = getSuggestedServices({ ...datosEvento, eventType }, services);
 
   if (!eventType || guestCount <= 0) {
-    return {
-      paqueteRecomendado: null,
-      promocionAplicable: null,
-      serviciosAdicionales: suggestedServices,
-      precioEstimado: 0,
+    return buildResponse({
+      packageItem: null,
+      promotion: null,
+      services: suggestedServices,
       nivelAjuste: "bajo",
       justificacion: "Completa los datos del evento para generar una recomendacion mas precisa.",
       necesitaMasDatos: true,
-    };
+    });
   }
 
   const promotion = getCompatiblePromotion(promotions, eventType, datosEvento.eventDate, guestCount);
@@ -165,4 +167,67 @@ export function recomendarPaquete(datosEvento, catalog = catalogoFastKote) {
   const justificacion = buildFallbackJustification(packageItem, budget, score);
 
   return buildResponse({ packageItem, promotion, services: suggestedServices, nivelAjuste, justificacion });
+}
+
+export function parseJsonResponse(content) {
+  const text = String(content || "").trim();
+  if (!text) throw new Error("Groq devolvio una respuesta vacia.");
+
+  const cleaned = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  return JSON.parse(cleaned);
+}
+
+export function validateRecommendation(rawRecommendation, catalog) {
+  if (!rawRecommendation || typeof rawRecommendation !== "object") return null;
+
+  const requiredKeys = ["paqueteRecomendado", "promocionAplicable", "serviciosAdicionales", "precioEstimado", "nivelAjuste", "justificacion", "necesitaMasDatos"];
+  if (!requiredKeys.every((key) => Object.prototype.hasOwnProperty.call(rawRecommendation, key))) return null;
+
+  const packages = (catalog.paquetes || []).filter(isActive);
+  const services = (catalog.servicios || []).filter(isActive);
+  const promotions = (catalog.promociones || []).filter(isActive);
+
+  const packageItem = rawRecommendation.paqueteRecomendado ? findCatalogItem(packages, rawRecommendation.paqueteRecomendado) : null;
+  if (rawRecommendation.paqueteRecomendado && !packageItem) return null;
+
+  if (!Array.isArray(rawRecommendation.serviciosAdicionales)) return null;
+  const serviceItems = rawRecommendation.serviciosAdicionales.map((service) => findCatalogItem(services, service));
+  if (serviceItems.some((service) => !service)) return null;
+
+  const promotion = rawRecommendation.promocionAplicable ? findCatalogItem(promotions, rawRecommendation.promocionAplicable) : null;
+  if (rawRecommendation.promocionAplicable && !promotion) return null;
+
+  const nivelAjuste = normalizeRecommendationText(rawRecommendation.nivelAjuste);
+  if (!["alto", "medio", "bajo"].includes(nivelAjuste)) return null;
+
+  const computedPrice = Number(packageItem?.precio || 0) + serviceItems.reduce((total, service) => total + Number(service.precio || 0), 0);
+  const aiPrice = Number(rawRecommendation.precioEstimado);
+
+  return {
+    paqueteRecomendado: packageItem
+      ? {
+          id: packageItem.id,
+          nombre: packageItem.nombre,
+          precio: Number(packageItem.precio || 0),
+        }
+      : null,
+    promocionAplicable: promotion,
+    serviciosAdicionales: serviceItems,
+    precioEstimado: Number.isFinite(aiPrice) ? aiPrice : computedPrice,
+    nivelAjuste,
+    justificacion: String(rawRecommendation.justificacion || "").trim() || "Recomendacion generada con el catalogo FastKote.",
+    necesitaMasDatos: Boolean(rawRecommendation.necesitaMasDatos),
+  };
+}
+
+export function withRecommendationOrigin(recommendation, origen) {
+  return {
+    ...recommendation,
+    origen,
+  };
 }

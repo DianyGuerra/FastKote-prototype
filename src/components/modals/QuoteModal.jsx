@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getMinEventDate, TAX_RATE } from "../../models/businessRules.model";
 import { timeToMinutes } from "../../services/calendar.service";
 import { currency, getActivePromotion, isActive, roundMoney } from "../../services/quoteCalculation.service";
-import { normalizeRecommendationText, recomendarPaquete } from "../../services/recommendation.service";
+import { fetchRecommendation } from "../../services/recommendationApi.service";
+import { normalizeRecommendationText } from "../../services/recommendation.service";
 import { AppIcon } from "../ui/AppIcon";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -12,6 +13,16 @@ import { SelectField } from "../ui/SelectField";
 
 const fallbackEventTypes = ["Cumpleanos infantil", "Evento escolar", "Mesa dulce", "Evento familiar", "Otro"];
 const personalizationModes = ["Desde cero", "Importada desde paquete"];
+const initialRecommendation = {
+  paqueteRecomendado: null,
+  promocionAplicable: null,
+  serviciosAdicionales: [],
+  precioEstimado: 0,
+  nivelAjuste: "bajo",
+  justificacion: "Completa los datos del evento para generar una recomendacion mas precisa.",
+  necesitaMasDatos: true,
+  origen: "fallback",
+};
 
 function customItemsToForm(items = []) {
   return items.map((item) => ({ serviceId: item.serviceId, qty: Number(item.qty || 1) }));
@@ -124,21 +135,60 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
   const visibleServices = activeServices.filter((service) => {
     return !selectedServiceIds.has(service.id) && (serviceMatcher(service.name) || serviceMatcher(service.type) || serviceMatcher(service.desc));
   });
-  const recommendation = useMemo(
-    () =>
-      recomendarPaquete({
-        eventType: form.eventType,
-        guestCount: form.guestCount,
-        estimatedBudget: form.estimatedBudget,
-        eventDate: form.eventDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        theme: form.theme,
-        eventLocation: form.eventLocation,
-        commercialConditions: form.commercialConditions,
-      }),
-    [form.eventType, form.guestCount, form.estimatedBudget, form.eventDate, form.startTime, form.endTime, form.theme, form.eventLocation, form.commercialConditions],
+  const recommendationInput = useMemo(
+    () => ({
+      eventType: form.eventType,
+      guestCount: form.guestCount,
+      estimatedBudget: form.estimatedBudget,
+      eventDate: form.eventDate,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      theme: form.theme,
+      eventLocation: form.eventLocation,
+      requiresInvoice: form.requiresInvoice === "Si",
+      commercialConditions: form.commercialConditions,
+      clientPreferences: form.commercialConditions,
+    }),
+    [
+      form.eventType,
+      form.guestCount,
+      form.estimatedBudget,
+      form.eventDate,
+      form.startTime,
+      form.endTime,
+      form.theme,
+      form.eventLocation,
+      form.requiresInvoice,
+      form.commercialConditions,
+    ],
   );
+  const [recommendation, setRecommendation] = useState(initialRecommendation);
+  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsRecommendationLoading(true);
+      fetchRecommendation(recommendationInput)
+        .then((nextRecommendation) => {
+          if (!isCurrent) return;
+          setRecommendation(nextRecommendation?.paqueteRecomendado !== undefined ? nextRecommendation : initialRecommendation);
+        })
+        .catch(() => {
+          if (!isCurrent) return;
+          setRecommendation(initialRecommendation);
+        })
+        .finally(() => {
+          if (isCurrent) setIsRecommendationLoading(false);
+        });
+    }, 300);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [recommendationInput]);
   const recommendedPackage = findByRecommendedName(activePackages, recommendation.paqueteRecomendado?.nombre);
   const recommendedServices = (recommendation.serviciosAdicionales || [])
     .map((service) => findByRecommendedName(activeServices, service.nombre))
@@ -373,9 +423,12 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h4 className="flex items-center gap-2 font-bold text-slate-950"><AppIcon name="wand" className="h-4 w-4 text-violet-700" /> Recomendacion inteligente</h4>
-                <p className="mt-1 text-sm text-violet-900">{recommendation.justificacion}</p>
+                <p className="mt-1 text-sm text-violet-900">{isRecommendationLoading ? "Generando recomendacion..." : recommendation.justificacion}</p>
               </div>
-              <Badge variant={recommendation.nivelAjuste === "alto" ? "Activo" : "Borrador"}>{recommendation.nivelAjuste}</Badge>
+              <div className="grid justify-items-end gap-1">
+                <Badge variant={recommendation.nivelAjuste === "alto" ? "Activo" : "Borrador"}>{isRecommendationLoading ? "..." : recommendation.nivelAjuste}</Badge>
+                <span className="text-xs font-semibold text-violet-700">{recommendation.origen === "ia" ? "Groq IA" : "Fallback local"}</span>
+              </div>
             </div>
             {recommendation.paqueteRecomendado ? (
               <div className="mt-4 grid gap-2 text-sm">
@@ -394,7 +447,7 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
                 </div>
               </div>
             )}
-            <Button className="mt-4 w-full" variant="secondary" icon="check" disabled={!canApplyRecommendation} onClick={applyRecommendation}>Aplicar recomendacion</Button>
+            <Button className="mt-4 w-full" variant="secondary" icon="check" disabled={isRecommendationLoading || !canApplyRecommendation} onClick={applyRecommendation}>Aplicar recomendacion</Button>
           </div>
 
           {isBase ? (
