@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getMinEventDate, TAX_RATE } from "../../models/businessRules.model";
 import { timeToMinutes } from "../../services/calendar.service";
 import { currency, getActivePromotion, isActive, roundMoney } from "../../services/quoteCalculation.service";
+import { fetchRecommendation } from "../../services/recommendationApi.service";
+import { normalizeRecommendationText } from "../../services/recommendation.service";
 import { AppIcon } from "../ui/AppIcon";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
@@ -11,6 +13,16 @@ import { SelectField } from "../ui/SelectField";
 
 const fallbackEventTypes = ["Cumpleanos infantil", "Evento escolar", "Mesa dulce", "Evento familiar", "Otro"];
 const personalizationModes = ["Desde cero", "Importada desde paquete"];
+const initialRecommendation = {
+  paqueteRecomendado: null,
+  promocionAplicable: null,
+  serviciosAdicionales: [],
+  precioEstimado: 0,
+  nivelAjuste: "bajo",
+  justificacion: "Completa los datos del evento para generar una recomendacion mas precisa.",
+  necesitaMasDatos: true,
+  origen: "fallback",
+};
 
 function customItemsToForm(items = []) {
   return items.map((item) => ({ serviceId: item.serviceId, qty: Number(item.qty || 1) }));
@@ -32,6 +44,25 @@ function getPackageItems(packageItem, services) {
 function matchesQuery(...values) {
   const query = values[0];
   return (value) => !query || String(value || "").toLowerCase().includes(query);
+}
+
+function findByRecommendedName(items, recommendedName) {
+  const normalized = normalizeRecommendationText(recommendedName);
+  if (!normalized) return null;
+  return items.find((item) => {
+    const itemName = normalizeRecommendationText(item.name);
+    return itemName === normalized || itemName.includes(normalized) || normalized.includes(itemName);
+  });
+}
+
+function mergeCustomItems(currentItems, nextItems) {
+  const merged = [...currentItems];
+  nextItems.forEach((item) => {
+    const existing = merged.find((current) => current.serviceId === item.serviceId);
+    if (existing) existing.qty = Math.max(Number(existing.qty || 0), Number(item.qty || 1));
+    else merged.push({ serviceId: item.serviceId, qty: Number(item.qty || 1) });
+  });
+  return merged;
 }
 
 export function QuoteModal({ clients, packages, packageMetrics, services, promotions, eventTypes = fallbackEventTypes, initialQuote = null, onClose, onSave }) {
@@ -104,6 +135,65 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
   const visibleServices = activeServices.filter((service) => {
     return !selectedServiceIds.has(service.id) && (serviceMatcher(service.name) || serviceMatcher(service.type) || serviceMatcher(service.desc));
   });
+  const recommendationInput = useMemo(
+    () => ({
+      eventType: form.eventType,
+      guestCount: form.guestCount,
+      estimatedBudget: form.estimatedBudget,
+      eventDate: form.eventDate,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      theme: form.theme,
+      eventLocation: form.eventLocation,
+      requiresInvoice: form.requiresInvoice === "Si",
+      commercialConditions: form.commercialConditions,
+      clientPreferences: form.commercialConditions,
+    }),
+    [
+      form.eventType,
+      form.guestCount,
+      form.estimatedBudget,
+      form.eventDate,
+      form.startTime,
+      form.endTime,
+      form.theme,
+      form.eventLocation,
+      form.requiresInvoice,
+      form.commercialConditions,
+    ],
+  );
+  const [recommendation, setRecommendation] = useState(initialRecommendation);
+  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsRecommendationLoading(true);
+      fetchRecommendation(recommendationInput)
+        .then((nextRecommendation) => {
+          if (!isCurrent) return;
+          setRecommendation(nextRecommendation?.paqueteRecomendado !== undefined ? nextRecommendation : initialRecommendation);
+        })
+        .catch(() => {
+          if (!isCurrent) return;
+          setRecommendation(initialRecommendation);
+        })
+        .finally(() => {
+          if (isCurrent) setIsRecommendationLoading(false);
+        });
+    }, 300);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [recommendationInput]);
+  const recommendedPackage = findByRecommendedName(activePackages, recommendation.paqueteRecomendado?.nombre);
+  const recommendedServices = (recommendation.serviciosAdicionales || [])
+    .map((service) => findByRecommendedName(activeServices, service.nombre))
+    .filter(Boolean);
+  const canApplyRecommendation = Boolean(recommendedPackage || recommendedServices.length);
 
   const errors = {
     clientId: form.clientId ? "" : "Selecciona un cliente.",
@@ -181,6 +271,46 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
 
   const removeCustomItem = (serviceId) => {
     setCustomItems((current) => current.filter((item) => item.serviceId !== serviceId));
+  };
+
+  const applyRecommendation = () => {
+    const recommendedServiceItems = recommendedServices.map((service) => ({ serviceId: service.id, qty: 1 }));
+
+    if (recommendedPackage && recommendedServiceItems.length) {
+      setImportPackageId(recommendedPackage.id);
+      setForm((current) => ({
+        ...current,
+        quoteType: "Personalizada",
+        personalizationMode: "Importada desde paquete",
+        packageId: "",
+        sourcePackageId: recommendedPackage.id,
+      }));
+      setCustomItems(mergeCustomItems(getPackageItems(recommendedPackage, activeServices), recommendedServiceItems));
+      return;
+    }
+
+    if (recommendedPackage) {
+      setForm((current) => ({
+        ...current,
+        quoteType: "Base",
+        personalizationMode: null,
+        packageId: recommendedPackage.id,
+        sourcePackageId: null,
+      }));
+      setCustomItems([]);
+      return;
+    }
+
+    if (recommendedServiceItems.length) {
+      setForm((current) => ({
+        ...current,
+        quoteType: "Personalizada",
+        personalizationMode: "Desde cero",
+        packageId: "",
+        sourcePackageId: null,
+      }));
+      setCustomItems((current) => mergeCustomItems(current, recommendedServiceItems));
+    }
   };
 
   const save = () => {
@@ -289,6 +419,37 @@ export function QuoteModal({ clients, packages, packageMetrics, services, promot
         </div>
 
         <div className="grid content-start gap-4">
+          <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="flex items-center gap-2 font-bold text-slate-950"><AppIcon name="wand" className="h-4 w-4 text-violet-700" /> Recomendacion inteligente</h4>
+                <p className="mt-1 text-sm text-violet-900">{isRecommendationLoading ? "Generando recomendacion..." : recommendation.justificacion}</p>
+              </div>
+              <div className="grid justify-items-end gap-1">
+                <Badge variant={recommendation.nivelAjuste === "alto" ? "Activo" : "Borrador"}>{isRecommendationLoading ? "..." : recommendation.nivelAjuste}</Badge>
+                <span className="text-xs font-semibold text-violet-700">{recommendation.origen === "ia" ? "Groq IA" : "Fallback local"}</span>
+              </div>
+            </div>
+            {recommendation.paqueteRecomendado ? (
+              <div className="mt-4 grid gap-2 text-sm">
+                <div className="flex justify-between gap-3"><span className="text-slate-600">Paquete recomendado</span><strong className="text-slate-950">{recommendation.paqueteRecomendado.nombre}</strong></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-600">Precio estimado</span><strong className="text-slate-950">{currency(recommendation.precioEstimado)}</strong></div>
+                <div className="flex justify-between gap-3"><span className="text-slate-600">Promocion aplicable</span><strong className="text-slate-950">{recommendation.promocionAplicable?.nombre || "Sin promocion aplicable"}</strong></div>
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg bg-white/70 p-3 text-sm text-slate-600">Completa los datos del evento para generar una recomendacion mas precisa.</p>
+            )}
+            {!!recommendation.serviciosAdicionales?.length && (
+              <div className="mt-3">
+                <p className="text-xs font-bold uppercase text-violet-700">Servicios adicionales sugeridos</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {recommendation.serviciosAdicionales.map((service) => <Badge key={service.id} variant="Borrador">{service.nombre}</Badge>)}
+                </div>
+              </div>
+            )}
+            <Button className="mt-4 w-full" variant="secondary" icon="check" disabled={isRecommendationLoading || !canApplyRecommendation} onClick={applyRecommendation}>Aplicar recomendacion</Button>
+          </div>
+
           {isBase ? (
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="mb-4">
