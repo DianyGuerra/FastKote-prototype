@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { recomendarPaquete } from "../services/recommendation.service";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 const MINIMUM_REQUIRED_SCORE = 80;
 const MINIMUM_SUCCESSFUL_CASES = 8;
@@ -346,6 +348,47 @@ describe("Evaluación de fidelidad del recomendador FastKote", () => {
     console.log(`Recomendaciones favorables: ${successfulCases}/${testCases.length}`);
     console.log(`Porcentaje de fidelidad: ${fidelityPercentage}%`);
     console.log(`Nivel promedio de coincidencia: ${averageScore.toFixed(2)} puntos`);
+
+    const reportRows = results.map((result) => ({
+      caso: result.id,
+      paquete: result.recommendation.paqueteRecomendado?.nombre || "Sin paquete",
+      promocion: result.recommendation.promocionAplicable?.nombre || "Sin promoción",
+      puntaje: result.score,
+      favorable: result.isSuccessful ? "Sí" : "No",
+    }));
+
+    const markdownReport = [
+      "# Reporte de pruebas unitarias - Recomendador FastKote",
+      "",
+      "## Resumen general",
+      "",
+      `- Casos evaluados: ${testCases.length}`,
+      `- Recomendaciones favorables: ${successfulCases}/${testCases.length}`,
+      `- Porcentaje de fidelidad: ${fidelityPercentage}%`,
+      `- Nivel promedio de coincidencia: ${averageScore.toFixed(2)} puntos`,
+      `- Objetivo mínimo esperado: ${MINIMUM_SUCCESSFUL_CASES}/10 recomendaciones favorables`,
+      `- Cumplimiento del objetivo: ${successfulCases >= MINIMUM_SUCCESSFUL_CASES ? "Sí" : "No"}`,
+      "",
+      "## Resultados por caso",
+      "",
+      "| Caso | Paquete generado | Promoción generada | Puntaje | Favorable |",
+      "|---|---|---|---:|---|",
+      ...reportRows.map(
+        (row) =>
+          `| ${row.caso} | ${row.paquete} | ${row.promocion} | ${row.puntaje} | ${row.favorable} |`
+      ),
+      "",
+      "## Interpretación",
+      "",
+      `El recomendador obtuvo ${successfulCases} recomendaciones favorables de ${testCases.length} casos evaluados, alcanzando un porcentaje de fidelidad del ${fidelityPercentage}%.`,
+      "",
+      successfulCases >= MINIMUM_SUCCESSFUL_CASES
+        ? "Por lo tanto, se cumple el objetivo planteado, ya que el modelo alcanzó al menos el 80% de recomendaciones favorables."
+        : "Por lo tanto, no se cumple el objetivo planteado, ya que el modelo no alcanzó el 80% de recomendaciones favorables.",
+    ].join("\n");
+
+    mkdirSync("reports", { recursive: true });
+    writeFileSync(join("reports", "reporte-pruebas-fidelidad.md"), markdownReport, "utf8");
 
     expect(successfulCases).toBeGreaterThanOrEqual(MINIMUM_SUCCESSFUL_CASES);
     expect(fidelityPercentage).toBeGreaterThanOrEqual(80);
