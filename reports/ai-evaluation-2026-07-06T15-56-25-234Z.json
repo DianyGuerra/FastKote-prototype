@@ -1,0 +1,720 @@
+{
+  "metadata": {
+    "generatedAt": "2026-07-06T15:56:25.234Z",
+    "apiUrl": "http://localhost:3001/api/recommendation",
+    "healthUrl": "http://localhost:3001/api/health",
+    "delayBetweenCasesMs": 15000,
+    "model": "llama-3.3-70b-versatile"
+  },
+  "summary": {
+    "totalCases": 10,
+    "successfulCases": 10,
+    "minimumSuccessfulCases": 8,
+    "fidelityPercentage": 100,
+    "minimumRequiredScore": 80,
+    "averageScore": 97.5,
+    "averageResponseTime": 1335.88,
+    "aiResponses": 6,
+    "fallbackResponses": 4,
+    "errors": 0,
+    "goalMet": false
+  },
+  "results": [
+    {
+      "id": "CP-01",
+      "description": "Cumpleanos infantil con 30 invitados y presupuesto cercano a 100 dolares",
+      "input": {
+        "eventType": "Cumpleanos infantil",
+        "guestCount": 30,
+        "estimatedBudget": 100,
+        "eventDate": "2026-07-10",
+        "theme": "infantil",
+        "eventLocation": "Local",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Super Fiesta",
+          "Arma tu paquete a tu gusto",
+          "Paquete Infantil Basico"
+        ],
+        "expectedPromotion": null,
+        "maxBudget": 100,
+        "expectedServices": [
+          "Pinata personalizada",
+          "Estacion de granizados",
+          "Area de juegos"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-paquete-infantil-basico",
+          "nombre": "Paquete Infantil Básico",
+          "precio": 90
+        },
+        "promocionAplicable": null,
+        "serviciosAdicionales": [],
+        "precioEstimado": 90,
+        "nivelAjuste": "alto",
+        "justificacion": "El paquete recomendado es el Paquete Infantil Básico, ya que coincide con el tipo de evento (Cumpleaños infantil) y el número de invitados (30). El presupuesto estimado es de $100, por lo que el paquete seleccionado se ajusta a este presupuesto.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 2158
+      },
+      "responseTimeMs": 2197.04,
+      "origen": "ia",
+      "packageName": "Paquete Infantil Básico",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 2158,
+      "score": 95,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": false,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-02",
+      "description": "Cumpleanos infantil economico para 50 invitados",
+      "input": {
+        "eventType": "Cumpleanos infantil",
+        "guestCount": 50,
+        "estimatedBudget": 75,
+        "eventDate": "2026-07-15",
+        "theme": "snacks",
+        "eventLocation": "Local",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Bronce"
+        ],
+        "expectedPromotion": null,
+        "maxBudget": 75,
+        "expectedServices": [
+          "Pinata personalizada",
+          "Estacion de granizados",
+          "Area de juegos"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-bronce",
+          "nombre": "Combo Bronce",
+          "precio": 75
+        },
+        "promocionAplicable": null,
+        "serviciosAdicionales": [],
+        "precioEstimado": 75,
+        "nivelAjuste": "medio",
+        "justificacion": "El paquete recomendado es el Combo Bronce, ya que se ajusta al tipo de evento (Cumpleaños infantil) y al número de invitados (50). El presupuesto estimado es de $75, lo que coincide con el precio del paquete. No se aplican promociones adicionales.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 2210
+      },
+      "responseTimeMs": 2219.47,
+      "origen": "ia",
+      "packageName": "Combo Bronce",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 2210,
+      "score": 95,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": false,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-03",
+      "description": "Cumpleanos infantil con presupuesto intermedio",
+      "input": {
+        "eventType": "Cumpleanos infantil",
+        "guestCount": 50,
+        "estimatedBudget": 100,
+        "eventDate": "2026-07-20",
+        "theme": "snacks variados",
+        "eventLocation": "Local",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Plata",
+          "Arma tu paquete a tu gusto",
+          "Combo Super Fiesta"
+        ],
+        "expectedPromotion": null,
+        "maxBudget": 100,
+        "expectedServices": [
+          "Pinata personalizada",
+          "Estacion de granizados",
+          "Area de juegos"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-arma-tu-paquete-a-tu-gusto",
+          "nombre": "Arma tu paquete a tu gusto",
+          "precio": 99
+        },
+        "promocionAplicable": null,
+        "serviciosAdicionales": [],
+        "precioEstimado": 99,
+        "nivelAjuste": "medio",
+        "justificacion": "El paquete recomendado es 'Arma tu paquete a tu gusto' ya que se ajusta al tipo de evento 'Cumpleaños infantil' y al número de invitados (50). Aunque el presupuesto estimado es de 100, el paquete seleccionado tiene un precio de 99, lo que se ajusta a las necesidades del cliente.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 1771
+      },
+      "responseTimeMs": 1777,
+      "origen": "ia",
+      "packageName": "Arma tu paquete a tu gusto",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 1771,
+      "score": 95,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": false,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-04",
+      "description": "Cumpleanos infantil premium con presupuesto alto",
+      "input": {
+        "eventType": "Cumpleanos infantil",
+        "guestCount": 50,
+        "estimatedBudget": 120,
+        "eventDate": "2026-07-22",
+        "theme": "premium",
+        "eventLocation": "Local",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Oro"
+        ],
+        "expectedPromotion": null,
+        "maxBudget": 120,
+        "expectedServices": [
+          "Pinata personalizada",
+          "Estacion de granizados",
+          "Area de juegos"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-oro",
+          "nombre": "Combo Oro",
+          "precio": 120
+        },
+        "promocionAplicable": null,
+        "serviciosAdicionales": [],
+        "precioEstimado": 120,
+        "nivelAjuste": "bajo",
+        "justificacion": "El paquete recomendado es el Combo Oro, ya que se ajusta al tipo de evento (Cumpleaños infantil) y al número de invitados (50). El presupuesto estimado es igual al precio del paquete, por lo que no hay necesidad de ajustes adicionales.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 1693
+      },
+      "responseTimeMs": 1697.7,
+      "origen": "ia",
+      "packageName": "Combo Oro",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 1693,
+      "score": 95,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": false,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-05",
+      "description": "Dia del Nino dentro de fechas de promocion",
+      "input": {
+        "eventType": "Dia del Nino",
+        "guestCount": 25,
+        "estimatedBudget": 150,
+        "eventDate": "2026-05-30",
+        "theme": "evento infantil escolar",
+        "eventLocation": "Escuela",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Dia del Nino Basico",
+          "Combo Dia del Nino Premium"
+        ],
+        "expectedPromotion": "Dia del Nino",
+        "maxBudget": 150,
+        "expectedServices": [],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-dia-del-nino-basico",
+          "nombre": "Combo Día del Niño Básico",
+          "precio": 100
+        },
+        "promocionAplicable": {
+          "id": "PROM-dia-del-nino",
+          "nombre": "Día del Niño",
+          "tipoEvento": [
+            "Combo Día del Niño Básico",
+            "Combo Día del Niño Premium",
+            "Día del Niño",
+            "Eventos infantiles realizados durante la campaña del Día del Niño"
+          ],
+          "precioPorNino": 0,
+          "minimoNinos": 0,
+          "fechaInicio": "1900-01-01",
+          "fechaFin": "2999-12-31",
+          "incluye": [],
+          "descuento": "15%",
+          "condicion": "Eventos infantiles realizados durante la campaña del Día del Niño",
+          "estado": "activo"
+        },
+        "serviciosAdicionales": [],
+        "precioEstimado": 100,
+        "nivelAjuste": "bajo",
+        "justificacion": "El paquete recomendado es el Combo Día del Niño Básico, que incluye 2 horas de juegos, canguil ilimitado y 100 vasos de jugo. La promoción aplicable es la Promocion Dia del Nino, que ofrece un precio especial para eventos de día del niño. Sin embargo, el presupuesto estimado del cliente es de 150, por lo que el paquete recomendado está dentro del presupuesto.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 2530
+      },
+      "responseTimeMs": 2534.48,
+      "origen": "ia",
+      "packageName": "Combo Día del Niño Básico",
+      "promotionName": "Día del Niño",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 2530,
+      "score": 100,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": true,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-06",
+      "description": "Evento escolar dentro de campana Dia del Nino",
+      "input": {
+        "eventType": "Evento escolar",
+        "guestCount": 20,
+        "estimatedBudget": 100,
+        "eventDate": "2026-05-29",
+        "theme": "ninos",
+        "eventLocation": "Unidad educativa",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Dia del Nino Basico",
+          "Combo Plata",
+          "Combo Bronce"
+        ],
+        "expectedPromotion": "Dia del Nino",
+        "maxBudget": 100,
+        "expectedServices": [
+          "Estacion de granizados"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-dia-del-nino-basico",
+          "nombre": "Combo Día del Niño Básico",
+          "precio": 100
+        },
+        "promocionAplicable": {
+          "id": "PROM-dia-del-nino",
+          "nombre": "Día del Niño",
+          "tipoEvento": [
+            "Combo Día del Niño Básico",
+            "Combo Día del Niño Premium",
+            "Día del Niño",
+            "Eventos infantiles realizados durante la campaña del Día del Niño"
+          ],
+          "precioPorNino": 0,
+          "minimoNinos": 0,
+          "fechaInicio": "1900-01-01",
+          "fechaFin": "2999-12-31",
+          "incluye": [],
+          "descuento": "15%",
+          "condicion": "Eventos infantiles realizados durante la campaña del Día del Niño",
+          "estado": "activo"
+        },
+        "serviciosAdicionales": [],
+        "precioEstimado": 100,
+        "nivelAjuste": "alto",
+        "justificacion": "El paquete recomendado es el Combo Día del Niño Básico, que coincide con el tipo de evento (Evento escolar) y el número de invitados (20). El presupuesto estimado es suficiente para cubrir el costo del paquete. La promoción aplicable es la Promocion Dia del Nino, que ofrece un descuento, pero en este caso no aplica un descuento específico.",
+        "necesitaMasDatos": false,
+        "origen": "ia",
+        "aiAttempted": true,
+        "aiSucceeded": true,
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 1425
+      },
+      "responseTimeMs": 1431.17,
+      "origen": "ia",
+      "packageName": "Combo Día del Niño Básico",
+      "promotionName": "Día del Niño",
+      "fallbackReason": "",
+      "aiAttempted": true,
+      "aiSucceeded": true,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 1425,
+      "score": 95,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": false,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-07",
+      "description": "Evento navideno economico",
+      "input": {
+        "eventType": "Navidad",
+        "guestCount": 30,
+        "estimatedBudget": 60,
+        "eventDate": "2026-12-15",
+        "theme": "navidena",
+        "eventLocation": "Empresa",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Navideno Basico"
+        ],
+        "expectedPromotion": "Navidad",
+        "maxBudget": 60,
+        "expectedServices": [],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-navideno-basico",
+          "nombre": "Combo Navideño Básico",
+          "precio": 60
+        },
+        "promocionAplicable": {
+          "id": "PROM-navidad",
+          "nombre": "Navidad",
+          "tipoEvento": [
+            "Combo Navideño Básico",
+            "Combo Navideño Intermedio",
+            "Combo Navideño Premium",
+            "Navidad",
+            "Promoción válida durante temporada navideña"
+          ],
+          "precioPorNino": 0,
+          "minimoNinos": 0,
+          "fechaInicio": "1900-01-01",
+          "fechaFin": "2999-12-31",
+          "incluye": [],
+          "descuento": "10%",
+          "condicion": "Promoción válida durante temporada navideña",
+          "estado": "activo"
+        },
+        "serviciosAdicionales": [],
+        "precioEstimado": 60,
+        "nivelAjuste": "alto",
+        "justificacion": "Fallback local: se evaluaron todos los paquetes activos del catalogo por tipo de evento, capacidad, presupuesto y tematica. Puntaje de ajuste: 101.",
+        "necesitaMasDatos": false,
+        "origen": "fallback",
+        "aiAttempted": true,
+        "aiSucceeded": false,
+        "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99268, Requested 4408. Please try again in 52m56.064s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 280
+      },
+      "responseTimeMs": 285.75,
+      "origen": "fallback",
+      "packageName": "Combo Navideño Básico",
+      "promotionName": "Navidad",
+      "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99268, Requested 4408. Please try again in 52m56.064s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "aiAttempted": true,
+      "aiSucceeded": false,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 280,
+      "score": 100,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": true,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-08",
+      "description": "Evento navideno con presupuesto premium",
+      "input": {
+        "eventType": "Navidad",
+        "guestCount": 30,
+        "estimatedBudget": 80,
+        "eventDate": "2026-12-20",
+        "theme": "premium navidad",
+        "eventLocation": "Empresa",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Navideno Premium"
+        ],
+        "expectedPromotion": "Navidad",
+        "maxBudget": 80,
+        "expectedServices": [],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-navideno-premium",
+          "nombre": "Combo Navideño Premium",
+          "precio": 80
+        },
+        "promocionAplicable": {
+          "id": "PROM-navidad",
+          "nombre": "Navidad",
+          "tipoEvento": [
+            "Combo Navideño Básico",
+            "Combo Navideño Intermedio",
+            "Combo Navideño Premium",
+            "Navidad",
+            "Promoción válida durante temporada navideña"
+          ],
+          "precioPorNino": 0,
+          "minimoNinos": 0,
+          "fechaInicio": "1900-01-01",
+          "fechaFin": "2999-12-31",
+          "incluye": [],
+          "descuento": "10%",
+          "condicion": "Promoción válida durante temporada navideña",
+          "estado": "activo"
+        },
+        "serviciosAdicionales": [],
+        "precioEstimado": 80,
+        "nivelAjuste": "alto",
+        "justificacion": "Fallback local: se evaluaron todos los paquetes activos del catalogo por tipo de evento, capacidad, presupuesto y tematica. Puntaje de ajuste: 101.",
+        "necesitaMasDatos": false,
+        "origen": "fallback",
+        "aiAttempted": true,
+        "aiSucceeded": false,
+        "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99250, Requested 4408. Please try again in 52m40.512s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 286
+      },
+      "responseTimeMs": 290.97,
+      "origen": "fallback",
+      "packageName": "Combo Navideño Premium",
+      "promotionName": "Navidad",
+      "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99250, Requested 4408. Please try again in 52m40.512s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "aiAttempted": true,
+      "aiSucceeded": false,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 286,
+      "score": 100,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": true,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-09",
+      "description": "Cumpleanos infantil con preferencia por fotos y videos",
+      "input": {
+        "eventType": "Cumpleanos infantil",
+        "guestCount": 30,
+        "estimatedBudget": 130,
+        "eventDate": "2026-08-01",
+        "theme": "fotos videos recuerdos entretenimiento",
+        "eventLocation": "Local",
+        "commercialConditions": "Cliente desea recuerdos del evento",
+        "clientPreferences": "Photo Booth, fotos y videos"
+      },
+      "expected": {
+        "acceptedPackages": [
+          "Combo Super Fiesta",
+          "Combo Oro",
+          "Arma tu paquete a tu gusto"
+        ],
+        "expectedPromotion": null,
+        "maxBudget": 130,
+        "expectedServices": [
+          "Photo Booth 360"
+        ],
+        "eventRelationValid": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": {
+          "id": "PKG-combo-oro",
+          "nombre": "Combo Oro",
+          "precio": 120
+        },
+        "promocionAplicable": null,
+        "serviciosAdicionales": [
+          {
+            "id": "SER-photo-booth-360",
+            "nombre": "Photo Booth 360",
+            "categoria": "Experiencia",
+            "precio": null,
+            "requiereCotizacion": true,
+            "tipoEvento": [],
+            "estado": "activo"
+          },
+          {
+            "id": "SER-pinata-personalizada",
+            "nombre": "Piñata personalizada",
+            "categoria": "Personalización",
+            "precio": null,
+            "requiereCotizacion": true,
+            "tipoEvento": [],
+            "estado": "activo"
+          },
+          {
+            "id": "SER-granizado",
+            "nombre": "Granizado",
+            "categoria": "Bebida",
+            "precio": null,
+            "requiereCotizacion": true,
+            "tipoEvento": [],
+            "estado": "activo"
+          },
+          {
+            "id": "SER-area-de-juegos",
+            "nombre": "Área de juegos",
+            "categoria": "Entretenimiento",
+            "precio": null,
+            "requiereCotizacion": true,
+            "tipoEvento": [],
+            "estado": "activo"
+          }
+        ],
+        "precioEstimado": 120,
+        "nivelAjuste": "alto",
+        "justificacion": "Fallback local: se evaluaron todos los paquetes activos del catalogo por tipo de evento, capacidad, presupuesto y tematica. Puntaje de ajuste: 94.",
+        "necesitaMasDatos": false,
+        "origen": "fallback",
+        "aiAttempted": true,
+        "aiSucceeded": false,
+        "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99232, Requested 4438. Please try again in 52m50.88s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 285
+      },
+      "responseTimeMs": 291.95,
+      "origen": "fallback",
+      "packageName": "Combo Oro",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99232, Requested 4438. Please try again in 52m50.88s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "aiAttempted": true,
+      "aiSucceeded": false,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 285,
+      "score": 100,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": true,
+      "hasValidJustification": true
+    },
+    {
+      "id": "CP-10",
+      "description": "Datos incompletos del evento",
+      "input": {
+        "eventType": "",
+        "guestCount": 0,
+        "estimatedBudget": 100,
+        "eventDate": "2026-08-05",
+        "theme": "",
+        "eventLocation": "",
+        "commercialConditions": ""
+      },
+      "expected": {
+        "acceptedPackages": [],
+        "expectedPromotion": null,
+        "maxBudget": null,
+        "expectedServices": [],
+        "eventRelationValid": true,
+        "needsMoreData": true
+      },
+      "recommendation": {
+        "paqueteRecomendado": null,
+        "promocionAplicable": null,
+        "serviciosAdicionales": [],
+        "precioEstimado": 0,
+        "nivelAjuste": "bajo",
+        "justificacion": "Completa los datos del evento para generar una recomendacion mas precisa.",
+        "necesitaMasDatos": true,
+        "origen": "fallback",
+        "aiAttempted": true,
+        "aiSucceeded": false,
+        "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99214, Requested 4308. Please try again in 50m43.008s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+        "model": "llama-3.3-70b-versatile",
+        "aiLatencyMs": 629
+      },
+      "responseTimeMs": 633.28,
+      "origen": "fallback",
+      "packageName": "Sin paquete",
+      "promotionName": "Sin promocion",
+      "fallbackReason": "Groq respondio 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kqd3nhxeec2sj4b3dg79jhds` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99214, Requested 4308. Please try again in 50m43.008s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "aiAttempted": true,
+      "aiSucceeded": false,
+      "model": "llama-3.3-70b-versatile",
+      "aiLatencyMs": 629,
+      "score": 100,
+      "isSuccessful": true,
+      "packageMatches": true,
+      "promotionMatches": true,
+      "budgetComplies": true,
+      "serviceMatches": true,
+      "hasValidJustification": true
+    }
+  ]
+}

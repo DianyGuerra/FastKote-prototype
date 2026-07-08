@@ -81,6 +81,7 @@ app.get("/api/health", (_request, response) => {
 
 app.post("/api/recommendation", async (request, response) => {
   const datosEvento = request.body?.datosEvento;
+  const includeDiagnostics = request.body?.includeDiagnostics === true;
 
   if (!datosEvento || typeof datosEvento !== "object") {
     response.status(400).json({ error: "El body debe incluir datosEvento como objeto." });
@@ -90,20 +91,44 @@ app.post("/api/recommendation", async (request, response) => {
   try {
     const catalog = await loadCatalog();
     const fallback = withRecommendationOrigin(recomendarPaquete(datosEvento, catalog), "fallback");
+    const aiStartedAt = Date.now();
 
     try {
       const groqRecommendation = await requestGroqRecommendation(datosEvento, catalog);
       const validatedRecommendation = validateRecommendation(groqRecommendation, catalog);
+      const aiLatencyMs = Date.now() - aiStartedAt;
 
       if (!validatedRecommendation) {
         throw new Error("La recomendacion de Groq no coincide con el catalogo local.");
       }
 
-      response.json(withRecommendationOrigin(validatedRecommendation, "ia"));
+      const aiResponse = withRecommendationOrigin(validatedRecommendation, "ia");
+      response.json(
+        includeDiagnostics
+          ? {
+              ...aiResponse,
+              aiAttempted: true,
+              aiSucceeded: true,
+              model: groqModel,
+              aiLatencyMs,
+            }
+          : aiResponse,
+      );
       return;
     } catch (error) {
       console.warn(`[recommendation] usando fallback local: ${error.message}`);
-      response.json(fallback);
+      response.json(
+        includeDiagnostics
+          ? {
+              ...fallback,
+              aiAttempted: true,
+              aiSucceeded: false,
+              fallbackReason: error.message,
+              model: groqModel,
+              aiLatencyMs: Date.now() - aiStartedAt,
+            }
+          : fallback,
+      );
     }
   } catch (error) {
     response.status(500).json({
